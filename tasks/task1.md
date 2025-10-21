@@ -82,7 +82,6 @@
 ### Deadline: Day 6
 
 ## Additional Notes:
-
-1. the user can’t create an account until he completes the sign up and the onboarding (completing the preference, location).
-
-2. Any questions should be in a meeting.
+1. The user can’t create an account until he completes the sign up and the onboarding (completing the preference, location).
+2. Document every thing you do in a document file.
+3. Any questions should be in a meeting.
