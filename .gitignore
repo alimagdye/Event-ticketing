@@ -4,4 +4,4 @@ node_modules
 
 auth/src/generated/
 auth/notes.txt
-auth/client_secret_326770524087-prkq21vsck5cgt51p8c1qpj0ffm3c4mp.apps.googleusercontent.com.json
+auth/client-information.json
