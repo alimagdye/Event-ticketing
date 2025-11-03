@@ -2,6 +2,6 @@ node_modules
 # Keep environment variables out of version control
 .env
 
-/src/generated
-
-client_secret_326770524087-prkq21vsck5cgt51p8c1qpj0ffm3c4mp.apps.googleusercontent.com.json
+auth/src/generated/
+auth/notes.txt
+auth/client_secret_326770524087-prkq21vsck5cgt51p8c1qpj0ffm3c4mp.apps.googleusercontent.com.json
