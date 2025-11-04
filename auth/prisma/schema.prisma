@@ -14,10 +14,83 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  name       String?
-  city       String?
-  createdAt  DateTime @default(now())
+model Attendee {
+  attendeeId       String          @id @default(uuid())
+  email             String          @unique
+  password          String?
+  name              String
+  providerId        String? // ID from Google/Facebook/Apple/local
+  authProvider      AuthProvider
+  isCompleted       Boolean         @default(false)
+  languagePreference Language     @default(EN)
+  age               Int?
+  gender            Gender?
+  city              City?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  categories        AttendeeFavoriteCategory[]
+}
+
+model Category {
+  id        String                     @id @default(uuid())
+  name      CategoryName               @unique
+  attendees AttendeeFavoriteCategory[]
+}
+
+model AttendeeFavoriteCategory {
+  attendee   Attendee  @relation(fields: [attendeeId], references: [attendeeId])
+  attendeeId String
+  category   Category  @relation(fields: [categoryId], references: [id])
+  categoryId String
+  @@id([attendeeId, categoryId])
+}
+
+enum CategoryName {
+  MUSIC
+  SPORTS
+  THEATER
+  COMEDY
+  EDUCATION
+  TECHNOLOGY
+  HEALTH
+  BUSINESS
+  ART
+  TRAVEL
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum City {
+  CAIRO
+  ALEXANDRIA
+  GIZA
+  LUXOR
+  ASWAN
+  SHARM_EL_SHEIKH
+  HURGHADA
+  TANTA
+  MANSOURA
+  PORT_SAID
+  SUEZ
+  ISMAILIA
+  ZAGAZIG
+  DAMIETTA
+  FAYOUM
+  BENI_SUEF
+  QENA
+}
+
+enum AuthProvider {
+  GOOGLE
+  FACEBOOK
+  APPLE
+  LOCAL
+}
+
+enum Language {
+  EN
+  AR
 }
