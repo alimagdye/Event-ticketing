@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String     @id @default(uuid())
+  email      String     @unique
+  password   String?
+  name       String
+  role       Role @default(ATTENDEE)
+  phone              String?  @unique
+  isVerified         Boolean  @default(false)
+  idInProviderDB         String?
+  authProvider       AuthProvider @default(LOCAL)
+  isCompleted        Boolean   @default(false)
+  languagePreference Language  @default(EN)
+  birthDate          DateTime?
+  gender             Gender?
+  governorate        GovernorateName?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  categories         AttendeeFavoriteCategory[]
+  refreshToken       RefreshToken[]
+}
+
+model Category {
+  id        String               @id @default(uuid())
+  name      String               @unique
+  attendees AttendeeFavoriteCategory[]
+}
+
+model AttendeeFavoriteCategory {
+  attendee   User  @relation(fields: [attendeeId], references: [id])
+  attendeeId String
+  category   Category  @relation(fields: [categoryId], references: [id])
+  categoryId String
+  @@id([attendeeId, categoryId])
+}
+
+enum Role {
+  ATTENDEE
+  ATTENDEEANDORGANIZER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+}
+
+enum AuthProvider {
+  GOOGLE
+  FACEBOOK
+  APPLE
+  LOCAL
+}
+
+enum Language {
+  EN
+  AR
+}
+
+enum GovernorateName {
+  CAIRO
+  GIZA
+  ALEXANDRIA
+  ASWAN
+  LUXOR
+  QALYUBIA
+  SHARQIA
+  GHARBIA
+  FAIYUM
+  BENI_SUEF
+  MINYA
+  ASSIUT
+  SOHAG
+  QENA
+  RED_SEA
+  SOUTH_SINAI
+  NORTH_SINAI
+  NEW_VALLEY
+  DAMIETTA
+  DAKAHLIA
+  PORT_SAID
+  SUEZ
+  ISMAILIA
+  MENOUFIA
+  KAFR_EL_SHEIKH
+  BEHEIRA
+  MATROUH
+}
+
+model Otp {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  code      String
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model ResetPasswordToken {
+  id         Int      @id @default(autoincrement())
+  email      String
+  token      String
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+}
+
+model RefreshToken {
+  id        Int       @id   @default(autoincrement())
+  token     String    @unique
+  isRevoked Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, token])
+}
