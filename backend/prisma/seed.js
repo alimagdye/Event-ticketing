@@ -2,10 +2,20 @@ import { prisma } from '../src/config/db.js';
 
 //! Seeders
 import seedUsers from './seeders/user.seeder.js';
+import seedCategories from './seeders/category.seeder.js';
+import seedGovernorates from './seeders/governorate.seeder.js';
+import seedVenues from './seeders/venue.seeder.js';
+import seedEvents from './seeders/event.seeder.js';
+import seedOrganizers from './seeders/organizer.seeder.js';
 
 async function main() {
     console.log('🚀 Starting database seed...');
-    await seedUsers(prisma);
+    await seedGovernorates(prisma); // this must be first, and must exist before any deployments
+    // const users = await seedUsers(prisma);
+    // const categories = await seedCategories(prisma);
+    // const venues = await seedVenues(prisma);
+    // const organizers = await seedOrganizers(prisma, { users });
+    // await seedEvents(prisma, { categories, venues, organizers });
     console.log('🌱 All seeders completed.');
 }
 

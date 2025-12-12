@@ -80,7 +80,7 @@ function setupEnvFile() {
 }
 
 function createDirectories() {
-    const directories = ['logs'];
+    const directories = ['logs', 'uploads'];
     
     directories.forEach(dir => {
         const dirPath = path.join(process.cwd(), dir);

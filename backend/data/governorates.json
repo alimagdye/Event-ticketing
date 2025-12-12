@@ -1,0 +1,139 @@
+{
+    "governorates": [
+        {
+            "name": "CAIRO",
+            "latitude": 30.033333,
+            "longitude": 31.233334
+        },
+        {
+            "name": "ALEXANDRIA",
+            "latitude": 31.2000924,
+            "longitude": 29.9187387
+        },
+        {
+            "name": "GIZA",
+            "latitude": 30.013056,
+            "longitude": 31.208853
+        },
+        {
+            "name": "PORT_SAID",
+            "latitude": 31.25654,
+            "longitude": 32.28411
+        },
+        {
+            "name": "ASWAN",
+            "latitude": 24.088938,
+            "longitude": 32.89983
+        },
+        {
+            "name": "ASYUT",
+            "latitude": 27.180134,
+            "longitude": 31.189283
+        },
+        {
+            "name": "SUHAJ",
+            "latitude": 26.549999,
+            "longitude": 31.700001
+        },
+        {
+            "name": "THE_LAKE",
+            "latitude": 31.04056,
+            "longitude": 30.47
+        },
+        {
+            "name": "AD_DAKAHLIYA",
+            "latitude": 31.037933,
+            "longitude": 31.381523
+        },
+        {
+            "name": "DAMIETTA",
+            "latitude": 31.41754,
+            "longitude": 31.814444
+        },
+        {
+            "name": "FAIYUM",
+            "latitude": 29.308402,
+            "longitude": 30.84285
+        },
+        {
+            "name": "GHARBIA",
+            "latitude": 30.78651,
+            "longitude": 31.00038
+        },
+        {
+            "name": "KAFR_EL_SHEIKH",
+            "latitude": 31.10632,
+            "longitude": 30.941975
+        },
+        {
+            "name": "LUXOR",
+            "latitude": 25.687243,
+            "longitude": 32.639637
+        },
+        {
+            "name": "MATRUH",
+            "latitude": 31.354343,
+            "longitude": 27.237316
+        },
+        {
+            "name": "AL_MINYA",
+            "latitude": 28.100776,
+            "longitude": 30.754954
+        },
+        {
+            "name": "AL_MINUFIYA",
+            "latitude": 30.560456,
+            "longitude": 31.007948
+        },
+        {
+            "name": "NEW_VALLEY",
+            "latitude": 25.447615,
+            "longitude": 30.555038
+        },
+        {
+            "name": "NORTH_SINAI",
+            "latitude": 31.1316,
+            "longitude": 33.7984
+        },
+        {
+            "name": "AL_QALYUBIYA",
+            "latitude": 30.465993,
+            "longitude": 31.184831
+        },
+        {
+            "name": "QENA",
+            "latitude": 26.17,
+            "longitude": 32.72722
+        },
+        {
+            "name": "RED_SEA",
+            "latitude": 27.257381,
+            "longitude": 33.812912
+        },
+        {
+            "name": "EASTERN",
+            "latitude": 30.5877,
+            "longitude": 31.502
+        },
+        {
+            "name": "SOUTH_SINAI",
+            "latitude": 27.915817,
+            "longitude": 34.329948
+        },
+        {
+            "name": "SUEZ",
+            "latitude": 29.97371,
+            "longitude": 32.52627
+        },
+        {
+            "name": "BANI_SWEIF",
+            "latitude": 29.076,
+            "longitude": 31.097
+        },
+        {
+            "name": "AL_ISMAILIYA",
+            "latitude": 30.60427,
+            "longitude": 32.27225
+        }
+    ]
+}
