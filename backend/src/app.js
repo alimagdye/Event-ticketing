@@ -23,6 +23,7 @@ import onboardingRoutes from './routes/onboarding.routes.js';
 import organizerDashboardRoutes from './routes/organizerDashboard.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
+import newsletterRoutes from './routes/newsletter.routes.js';
 
 //! PAYMENT ROUTES - NEEDS RAW BODY PARSING (DON'T MOVE IT AFTER express.json())
 app.use('/api/v1/payments', paymentRoutes);
@@ -37,6 +38,7 @@ app.use('/api/v1/home', homeRoutes);
 app.use('/api/v1/events', eventRoutes);
 app.use('/api/v1/organizer/dashboard', organizerDashboardRoutes);
 app.use('/api/v1/orders', orderRoutes);
+app.use('/api/v1/newsletter', newsletterRoutes);
 
 //! AFTER MIDDLEWARES
 import { errorHandler } from './middlewares/errorHandler.js';

@@ -19,13 +19,15 @@ const venueService = {
         },
         tx = prismaClient
     ) {
-        const governorateId = await tx.governorate.findUnique({
+        const governorate = await tx.governorate.findUnique({
             where: { name: state.replaceAll(' ', '_').toUpperCase() },
             select: { id: true },
-        })?.id;
+        });
+
+        const governorateId = governorate?.id;
 
         if (!governorateId) {
-            return sendFail(res, { message: 'Governorate not found' }, 404);
+            return { message: 'Governorate not found' };
         }
 
         return tx.venue.create({
@@ -49,13 +51,15 @@ const venueService = {
         { name, address, city, country, zipCode, longitude, latitude, googlePlaceId, state },
         tx = prismaClient
     ) {
-        const governorateId = await tx.governorate.findUnique({
+        const governorate = await tx.governorate.findUnique({
             where: { name: state.replaceAll(' ', '_').toUpperCase() },
             select: { id: true },
-        })?.id;
+        });
+
+        const governorateId = governorate?.id;
 
         if (!governorateId) {
-            return sendFail(res, { message: 'Governorate not found' }, 404);
+            return  { message: 'Governorate not found' };
         }
 
         return tx.venue.update({

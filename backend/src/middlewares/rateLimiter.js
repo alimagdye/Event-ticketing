@@ -117,6 +117,20 @@ const emailLimiter = rateLimiter({
     prefix: 'email',
 });
 
+const subscribeLimiter = rateLimiter({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 3,
+    message: 'Too many subscription attempts. Please try again later.',
+    prefix: 'subscribe',
+});
+
+const confirmLimiter = rateLimiter({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5,
+    message: 'Too many confirmation attempts. Please try again later.',
+    prefix: 'confirm',
+});
+
 /**
  * Generous rate limiter for public endpoints
  * 300 requests per 15 minutes
@@ -158,6 +172,8 @@ export {
     apiLimiter,
     heavyLimiter,
     emailLimiter,
+    subscribeLimiter,
+    confirmLimiter,
     publicLimiter,
     refreshLimiter,
     requestResetLimiter,

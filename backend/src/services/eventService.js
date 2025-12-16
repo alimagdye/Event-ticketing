@@ -623,7 +623,7 @@ const eventService = {
             'createdAt', e."createdAt",
             'venue', to_jsonb(v),
             'ticketTypes', COALESCE(json_agg(tt) FILTER (WHERE tt.id IS NOT NULL), '[]'::json),
-            'bannerUrl', NULL -- optional: you can compute later
+            'bannerUrl', NULL 
         ) AS event
         FROM "Event" e
         JOIN "Venue" v ON v.id = e."venueId"

@@ -46,6 +46,9 @@ const organizerService = {
         try {
             const result = await prismaClient.$transaction(async (tx) => {
                 const venue = await venueService.create(location, tx);
+                if (venue.message) {
+                    return { status: 'fail', data: { error: venue.message } };
+                }
 
                 const event = await eventService.create(
                     organizer.id,
@@ -121,6 +124,10 @@ const organizerService = {
                 let updatedVenueId = event.venueId;
                 if (location) {
                     const updatedVenue = await venueService.update(event.venueId, location, tx);
+                    if (updatedVenue.message) {
+                        return { status: 'fail', data: { error: updatedVenue.message } };
+                    }
+
                     updatedVenueId = updatedVenue.id;
                 }
 
@@ -262,7 +269,7 @@ const organizerService = {
     async listEvents(userId) {
         const organizer = await organizerService.getByUserId(userId);
 
-        if(!organizer) {
+        if (!organizer) {
             return {
                 status: 'fail',
                 data: { error: 'Organizer not found' },
@@ -274,29 +281,29 @@ const organizerService = {
         const events = await prismaClient.event.findMany({
             where: { organizerId },
             select: {
-            id: true,
-            organizerId: true,
-            title: true,
-            description: true,
-            venueId: true,
-            bannerDisk: true,
-            bannerPath: true,
-            venue: {
-                select: {
-                    name: true,
+                id: true,
+                organizerId: true,
+                title: true,
+                description: true,
+                venueId: true,
+                bannerDisk: true,
+                bannerPath: true,
+                venue: {
+                    select: {
+                        name: true,
+                    },
                 },
             },
-        }});
+        });
 
         const result = await eventService.getBannerAbsUrl(events);
-
 
         return {
             status: 'success',
             data: {
-                result
-            }
-        }
+                result,
+            },
+        };
     },
 };
 

@@ -7,11 +7,11 @@ const transporter = nodemailer.createTransport({
     secure: false,
     ...(MAIL_USER && MAIL_PASS
         ? {
-            auth: {
-                user: MAIL_USER,
-                pass: MAIL_PASS,
-            },
-        }
+              auth: {
+                  user: MAIL_USER,
+                  pass: MAIL_PASS,
+              },
+          }
         : {}),
 });
 
