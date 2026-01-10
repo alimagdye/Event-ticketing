@@ -37,7 +37,7 @@ class OnboardingController {
 
             const missing = [];
             if (!user.birthDate) missing.push('basic');
-            if (!user.governorate) missing.push('governorate');
+            if (!user.governorateId) missing.push('governorate');
 
             const hasPreferences = await prisma.attendeeFavoriteCategory.findFirst({
                 where: { attendeeId: id },
@@ -154,7 +154,7 @@ class OnboardingController {
         try {
             const { id } = req.user;
             const governorateName = sanitize(req.body.governorate).trim();
-            console.log(governorateName)
+            console.log(governorateName);
             if (!governorateName) {
                 return sendFail(res, { message: 'Governorate is required' }, 400);
             }
@@ -171,13 +171,12 @@ class OnboardingController {
 
             const governorate = await prisma.governorate.findUnique({
                 where: { name: governorateName },
-
             });
 
             const governorateId = governorate?.id;
 
             if (!governorate) {
-                console.log(governorate)
+                console.log(governorate);
                 return sendFail(res, { message: 'Governorate not found' }, 404);
             }
 

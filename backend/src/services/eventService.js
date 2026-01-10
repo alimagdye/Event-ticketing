@@ -246,9 +246,7 @@ const eventService = {
         }
         if (relations?.eventSessions) {
             events.map((event) => {
-                event.eventSessions.map((session) => {
-
-                });
+                event.eventSessions.map((session) => {});
             });
         }
         return eventService.getBannerAbsUrl(events);
@@ -619,31 +617,51 @@ const eventService = {
 
         const rows = await prismaClient.$queryRawUnsafe(
             `
-        SELECT json_build_object(
-            'id', e.id,
-            'organizerId', e."organizerId",
-            'title', e.title,
-            'slug', e.slug,
-            'description', e.description,
-            'type', e.type,
-            'mode', e.mode,
-            'venueId', e."venueId",
-            'categoryId', e."categoryId",
-            'createdAt', e."createdAt",
-            'venue', to_jsonb(v),
-            'ticketTypes', COALESCE(json_agg(tt) FILTER (WHERE tt.id IS NOT NULL), '[]'::json),
-            'bannerUrl', NULL 
-        ) AS event
-        FROM "Event" e
-        JOIN "Venue" v ON v.id = e."venueId"
-        LEFT JOIN "TicketType" tt ON tt."eventId" = e.id
+  SELECT json_build_object(
+      'id', e.id,
+      'organizerId', e."organizerId",
+      'title', e.title,
+      'slug', e.slug,
+      'description', e.description,
+      'type', e.type,
+      'mode', e.mode,
+      'venueId', e."venueId",
+      'categoryId', e."categoryId",
+      'createdAt', e."createdAt",
 
-        WHERE v."governorateId" = ANY($1::int[])
+      'venue', to_jsonb(v),
 
-        GROUP BY e.id, v.id
-        ORDER BY array_position($1::int[], v."governorateId")
-        LIMIT $2 OFFSET $3;
-        `,
+      --  ticketTypes aggregated without duplication
+      'ticketTypes', COALESCE(tt.ticket_types, '[]'::json),
+
+      --  eventSessions aggregated without duplication
+      'eventSessions', COALESCE(es.sessions, '[]'::json),
+
+      --  keep these for getBannerAbsUrl()
+      'bannerDisk', e."bannerDisk",
+      'bannerPath', e."bannerPath"
+  ) AS event
+  FROM "Event" e
+  JOIN "Venue" v ON v.id = e."venueId"
+
+  --  aggregate ticket types
+  LEFT JOIN LATERAL (
+      SELECT json_agg(tt.*) AS ticket_types
+      FROM "TicketType" tt
+      WHERE tt."eventId" = e.id
+  ) tt ON TRUE
+
+  --  aggregate event sessions
+  LEFT JOIN LATERAL (
+      SELECT json_agg(es.*) AS sessions
+      FROM "EventSession" es
+      WHERE es."eventId" = e.id
+  ) es ON TRUE
+
+  WHERE v."governorateId" = ANY($1::int[])
+  ORDER BY array_position($1::int[], v."governorateId")
+  LIMIT $2 OFFSET $3;
+  `,
             otherGovsIdsSorted,
             limit,
             offset
