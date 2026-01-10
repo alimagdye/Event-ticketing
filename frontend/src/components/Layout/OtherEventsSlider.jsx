@@ -67,14 +67,12 @@ function OtherEventsSlider() {
   };
     const handleEndpoint=async()=>{
     try{
-
-      const response= await nearbyEvents();
-      const newcards = response.data.data
-
+      const response= await personalizedEvents();
       setcards(response.data.data.events);
+
     }
     catch(error){
-      
+      console.log(error)
     }
   }
 
@@ -112,16 +110,17 @@ function OtherEventsSlider() {
           {cards.map((card, index) => (
             <div key={index} className="shrink-0 w-80">
 
-            <Card
+           <Card
               key={index}
               bannerUrl={`${card.bannerUrl}`}
               title={card.title}
               description={card.description}
               date={card.date}
-              price={card.price}
+              price={card.ticketTypes||[]}
               views={card.viwes}
               id={card.id}
               slug={card.slug}
+              sessions={card.eventSessions||[]}
               crossOrigin="anonymous"
             />
               </div>
