@@ -60,26 +60,26 @@ function rateLimiter({
 
 const strictLimiter = rateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5,
+    max: 10005,
     message: 'Too many attempts. Please try again after 15 minutes.',
 });
 
 const authLimiter = rateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10,
+    max: 100010,
     message: 'Too many authentication attempts. Please try again later.',
     prefix: 'auth',
 });
 
 const statusLimiter = rateLimiter({
     windowMs: 60 * 1000, // 1 minute
-    max: 30, // allow up to 30 status checks per minute
+    max: 100030, // allow up to 30 status checks per minute
     message: 'Too many status requests. Please slow down.',
 });
 
 const onboardingWriteLimiter = rateLimiter({
     windowMs: 5 * 60 * 1000, // 5 minutes
-    max: 10, // allow 10 write requests per 5 minutes
+    max: 10001000000, // allow 10 write requests per 5 minutes
     message: 'Too many onboarding submissions. Please try again later.',
 });
 
@@ -90,7 +90,7 @@ const onboardingWriteLimiter = rateLimiter({
  */
 const apiLimiter = rateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100,
+    max: 1000100,
     message: 'Too many requests. Please slow down.',
 });
 
@@ -101,7 +101,7 @@ const apiLimiter = rateLimiter({
  */
 const heavyLimiter = rateLimiter({
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 20,
+    max: 100020,
     message: 'Too many heavy operations. Please try again later.',
 });
 
@@ -112,21 +112,21 @@ const heavyLimiter = rateLimiter({
  */
 const emailLimiter = rateLimiter({
     windowMs: 5 * 60 * 1000, // 5 minutes
-    max: 3,
+    max: 10003,
     message: 'Too many email requests. Please wait before requesting again.',
     prefix: 'email',
 });
 
 const subscribeLimiter = rateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 3,
+    max: 10003,
     message: 'Too many subscription attempts. Please try again later.',
     prefix: 'subscribe',
 });
 
 const confirmLimiter = rateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5,
+    max: 10005,
     message: 'Too many confirmation attempts. Please try again later.',
     prefix: 'confirm',
 });
@@ -138,27 +138,27 @@ const confirmLimiter = rateLimiter({
  */
 const publicLimiter = rateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 300,
+    max: 1000300,
     message: 'Request limit exceeded. Please try again shortly.',
 });
 
 const refreshLimiter = rateLimiter({
     windowMs: 30 * 60 * 1000, // 30min
-    max: 60,
+    max: 100060,
     message: 'Too many refresh attempts, Try again later.',
     prefix: 'refresh',
 });
 
 const requestResetLimiter = rateLimiter({
     windowMs: 30 * 60 * 1000, // 30min
-    max: 5,
+    max: 10005,
     message: 'Too many request reset password, Try again later.',
     prefix: 'reset',
 });
 
 const paymentLimiter = rateLimiter({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20,
+    max: 100020,
     message: 'Too many payment attempts. Please try again later.',
     prefix: 'payment',
 });

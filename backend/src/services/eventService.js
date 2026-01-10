@@ -32,6 +32,7 @@ const eventService = {
         bannerDisk: true,
         bannerPath: true,
         venueId: true,
+        eventSessions: true,
         categoryId: true,
         createdAt: true,
     },
@@ -39,6 +40,7 @@ const eventService = {
     DEFAULT_RELATIONS: {
         venue: true,
         ticketTypes: true,
+        eventSessions: true,
     },
 
     ALLOWED_RELATIONS: ['venue', 'category', 'organizer', 'eventSessions', 'ticketTypes'],
@@ -239,6 +241,13 @@ const eventService = {
             events.map((event) => {
                 event.ticketTypes.map((ticketType) => {
                     ticketType.price = parseFloat(ticketType.price);
+                });
+            });
+        }
+        if (relations?.eventSessions) {
+            events.map((event) => {
+                event.eventSessions.map((session) => {
+
                 });
             });
         }

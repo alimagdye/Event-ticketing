@@ -35,6 +35,7 @@ const organizerValidation = {
             .trim(),
 
         body('banner').custom(async (value, { req }) => {
+            console.log("file: ",req.file,"\nbody: ",req.body)
             if (!req.file) {
                 throw new Error('Banner image is required');
             }
@@ -176,6 +177,7 @@ const organizerValidation = {
 
         body('banner').custom(async (value, { req }) => {
             if (!req.file) {
+                console.log("file: ",req.file,"\nbody: ",req.body)
                 throw new Error('Banner image is required');
             }
 

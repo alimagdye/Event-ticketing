@@ -1,36 +1,52 @@
-import { Children, useState } from "react";
+import { Children, lazy, useState } from "react";
 import ActiveInterestedHart from "../Icons/ActiveInterestedHart.jsx";
 
 import UnactiveInterestedHart from "../Icons/UnactiveInterestedHart.jsx";
+import { Heart, Ticket } from "lucide-react";
+import { Link } from "react-router-dom";
+import { formatEventSessionDate } from "../../utils/dateFormater.js";
 
 
-function Card({image , title , time ,views ,about}) {
+function Card({bannerUrl , title , date ,price ,views ,description ,slug ,id ,sessions}) {
   const [interestedButten, setinterestedButten] = useState(false);
-
+  const sessionssInfo = formatEventSessionDate(sessions );
+  const priceRange = () => {
+    if (!price || price.length === 0) {
+      return "Free";
+    }
+    if(price.length === 1){
+      return `${price[0].price} EGY`;
+    }
+    const minprice = Math.min(...price.map((ticket) => ticket.price));
+    const maxprice = Math.max(...price.map((ticket) => ticket.price));
+    return `${minprice} - ${maxprice} EGY`;
+    }
   const handleInterested = (e) => {
     e.preventDefault();
-
+    // console.log(sessionssInfo)
     // 2. CRITICAL: Stop the event from propagating to the parent <div>
     e.stopPropagation();
+
     return setinterestedButten(!interestedButten);
   };
 
+
+  
   return (
     <>
-      {/* <div className="bg-white">
-        <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-7xl lg:px-8">
-          <h2 className="sr-only mb-12 ml-6 text-4xl font-extrabold ">
-            Events Just for You
-          </h2>
 
-          <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3  xl:gap-x-8"> */}
-      <a href="https://www.youtube.com/" className="max-w-full max-h-100 w-full ">
-        <div
-          className={` aspect-square rounded-lg  bg-cover bg-center h-64 w-full object-cover group-hover:opacity-75 xl:aspect-7/8`} style={{ backgroundImage: `url(${image})` }}
-        >
+      <Link to={`/events/${slug}?id=${id}`} className="max-w-full max-h-150  w-full mt-6 shadow-sm p-1 pb-6 rounded-xl "  >
+        <div className={`  rounded-lg border-0  bg-cover bg-center h-64 w-full object-cover group-hover:opacity-75 xl:aspect-7/8 relative`}>
+
+        <img  
+        src={encodeURI(bannerUrl)}
+        loading="lazy"
+        crossOrigin="anonymous"
+          className={`  rounded-lg border-0  bg-cover bg-center h-64 w-full object-cover group-hover:opacity-75 xl:aspect-7/8 relative`} style={{ backgroundImage: `url(${encodeURI(bannerUrl)})` }}
+        />
           <button
             onClick={handleInterested}
-            className="bg-white rounded-full w-10 h-10 relative left-87/100 top-6/100 flex items-center hover:cursor-pointer mr-100"
+            className="bg-white rounded-full w-10 h-10  left-87/100 top-6/100 flex items-center hover:cursor-pointer mr-100 absolute"
           >
             {interestedButten ? (
               <ActiveInterestedHart />
@@ -38,23 +54,31 @@ function Card({image , title , time ,views ,about}) {
               <UnactiveInterestedHart />
             )}
           </button>
+
         </div>
-        <div>
-          <div></div>
-          <h3 className="mt-4 text-xl font-bold text-gray-900">
+          
+        <div className="flex ">
+          <div className="w-1/6 text-xl font-bold text-primary mt-4 ml-2">{sessionssInfo?.dateText||'Dec 8'}</div>
+          <div className="ml-3">
+
+          <h3 className="mt-4 text-xl font-bold text-gray-900 line-clamp-1 wrap-break-words">
             {title}
           </h3>
-          <p className="mt-1 font-normal text-[#5A5A5A]">
-            {about}
+          <p className="mt-1 font-normal text-[#5A5A5A] w-full max-h-18 break-all line-clamp-2 wrap-break-word ">
+            {description}
           </p>
-          <p className="mt-1 font-light text-[#5A5A5A]">
-            {time}
+          <p className="mt-1 font-medium text-[#5A5A5A]">
+            {sessionssInfo?.startTime} - {sessionssInfo?.endTime || "6:30 PM - 9:30 PM"}
           </p>
-          <p className="mt-1 font-semibold text-[#5A5A5A]">
-            {views}
+          <p className="mt-1 font-normal text-secandry flex items-center">
+            <Heart size={20} className="mr-1 mb-1 " /> 0 Interested
           </p>
+          <p className="mt-1 font-semibold text-green-700 flex items-start">
+            <Ticket size={24}  className="mr-1 pt-1 " /> {priceRange()}
+          </p>
+          </div>
         </div>
-      </a>
+      </Link>
       {/* </div>
         </div>
       </div> */}

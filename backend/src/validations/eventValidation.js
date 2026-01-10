@@ -22,7 +22,6 @@ const eventValidation = {
             .exists()
             .withMessage('Ticket name is required')
             .trim()
-            .toUpperCase()
             .isString(),
         body('tickets.*.quantity')
             .exists()

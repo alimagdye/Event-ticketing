@@ -1,7 +1,7 @@
 import { useState } from "react";
 import FacebookLogo from "../Icons/FacebookLogo";
 import GoogleLogo from "../Icons/GoogleLogo";
-import EyeTrager from "../UI/eyetrager";
+import EyeTrager from "../Icons/Eyetrager";
 
 function SignUpFormOrganizerUser({ submitedData }) {
   const [showPassword, setshowPassword] = useState(false);

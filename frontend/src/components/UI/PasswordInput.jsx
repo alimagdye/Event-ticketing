@@ -1,5 +1,5 @@
 import { useState } from "react";
-import EyeTrager from "./eyetrager";
+import EyeTrager from "../Icons/Eyetrager";
 
 function PasswordInput({ content, id, password, setPassword, errors }) {
   const [showPassword, setShowPassword] = useState(false);

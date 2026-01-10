@@ -7,6 +7,7 @@ const categoryService = {
     CACHE_TTL: 60 * 60, // 1 hour
 
     DEFAULT_SELECTIONS: {
+        id: true,
         name: true,
         imageDisk: true,
         imagePath: true,

@@ -7,7 +7,7 @@ function CreateEventProgressBar({step}) {
   const progressWidth = ((currentStep - 1) / (totalSteps - 1)) * 100;
   
   return (
-    <div className="flex flex-col items-center mt-10">
+    <div className="flex flex-col items-center mt-10 transition-all">
       {/* Progress Container */}
       <div className="relative flex justify-between w-full mb-8">
         {/* Gray Line (background) */}

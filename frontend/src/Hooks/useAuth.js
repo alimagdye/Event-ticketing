@@ -2,7 +2,8 @@ import { useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 import { setTokens } from "../services/cookieTokenService";
-import { resendOtps } from "../APIs/authAPIs";
+import { resendOtps ,logout } from "../APIs/authAPIs";
+import { useUser } from "../Context/AuthProvider";
 
 export function useAuth({
   initialValues = {},
@@ -10,12 +11,17 @@ export function useAuth({
   onSubmit,
   redirectTo = null,
   redirectFrom = null,
+  openDialog = false,
+  dialogMessage,
+  setDialogMessage,
+  setopenDialog,
 }) {
+  const {user,setUser}= useUser();
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
-  const [showDialog, setShowDialog] = useState(false);
-  const [dialogMessage, setDialogMessage] = useState("");
+  // const [openDialog, setopenDialog] = useState(false);
+  // const [dialogMessage, setDialogMessage] = useState("");
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -26,14 +32,12 @@ export function useAuth({
 
   const handleShowPassword = () => setShowPassword((prev) => !prev);
 
-  const closeDialog = () => setShowDialog(false);
+  const closeDialog = () => setopenDialog(false);
 
   const submit = async (e) => {
     e.preventDefault();
-    console.log("submit");
 
     const formData = Object.fromEntries(new FormData(e.target).entries());
-    console.log("form");
 
     const validationErr = validator(formData);
 
@@ -42,26 +46,22 @@ export function useAuth({
     if (Object.keys(validationErr).length > 0) return;
 
     try {
-      console.log("submit");
       setLoading(true);
 
       const response = await onSubmit(formData);
-      console.log(
-        "Success:",
-        response.data,
-        response?.data?.accessToken?.token
-      );
-
+   
+      // console.log("token:  ", response.data.data);
       setTokens(response.data.data);
+      
 
       navigate(redirectTo, { state: { origin: redirectFrom } });
     } catch (error) {
-      console.log("error", error);
 
       const message =
         error.response?.data?.data?.error || "Something went wrong";
+        console.log("message", message);
       setDialogMessage(message);
-      setShowDialog(true);
+      setopenDialog(true);
     } finally {
       setLoading(false);
     }
@@ -71,21 +71,17 @@ export function useAuth({
 
     setErrors(validationErr);
 
-    // console.log(otp)
     // if (Object.keys(validationErr).length > 0) return;
-    console.log(":" + otp);
     try {
-      console.log(":" + otp);
       const response = await onSubmit(otp);
 
-      console.log("Success:", response.data);
 
       navigate(redirectTo, { state: { origin: redirectFrom } });
     } catch (error) {
-      // console.log(error.response.data.data.otp)
       const message = error.response?.data?.data?.otp || "Something went wrong";
+      console.log("message", message);
       setDialogMessage(message);
-      setShowDialog(true);
+      setopenDialog(true);
     }
   };
 
@@ -93,15 +89,14 @@ export function useAuth({
     try {
       const response = await resendOtps();
 
-      console.log("OTP Resent:", response.data);
     } catch (error) {
-      console.log("OTP Resent:", error.response.data);
       const message =
         error.response?.data?.data?.error ||
         "Something went wrong resending OTP";
       setDialogMessage(message);
-      setShowDialog(true);
+      setopenDialog(true);
     }
+
   };
 
   return {
@@ -113,9 +108,10 @@ export function useAuth({
     submit,
     submitOTP,
     resendOtp,
-    showDialog,
+    openDialog,
     dialogMessage,
     closeDialog,
     loading,
+    setLoading
   };
 }

@@ -15,7 +15,7 @@ const ticketTypeService = {
             eventId,
             name: ticket.name,
             price: parseFloat(ticket.price),
-            quantity: ticket.quantity,
+            quantity: parseFloat(ticket.quantity),
         }));
         return tx.ticketType.createManyAndReturn({
             data: ticketTypeData,
@@ -28,7 +28,7 @@ const ticketTypeService = {
             eventId,
             name: ticket.name || 'Free Ticket',
             price: 0,
-            quantity: ticket.quantity || 100,
+            quantity: parseFloat(ticket.quantity) || 100,
         }));
         return tx.ticketType.createManyAndReturn({
             data: ticketTypeData,

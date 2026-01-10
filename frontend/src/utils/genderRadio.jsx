@@ -5,13 +5,13 @@ const genderRadio = [
   {
     icon: <MaleIcon />,
     label: "MALE",
-    value: "MALE",
+    value: "male",
   },
   {
     icon: <FemaleIcon />,
 
     label: "FEMALE",
-    value: "FEMALE",
+    value: "female",
   },
 ];
 export default genderRadio;

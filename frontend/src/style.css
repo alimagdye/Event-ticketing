@@ -1,4 +1,8 @@
+
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+
 
 *{
     scroll-behavior: smooth;
@@ -13,4 +17,15 @@
     --color-primary : #BB52E0;
     --color-secandry : #FF49B5;
     
+}
+
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+  color:rgba(26, 197, 4, 0.826);
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE & Edge */
+  scrollbar-width: none; /* Firefox */
 }

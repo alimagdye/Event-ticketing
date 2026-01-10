@@ -148,7 +148,7 @@ class GoogleAuthController extends AuthThirdPartyService {
         this.oauth2Client = new google.auth.OAuth2(
             CLIENT_ID,
             CLIENT_SECRET,
-            'http://' + HOSTNAME + ':' + PORT + CALLBACK_URL
+            'http://' + 'localhost' + ':' + PORT + CALLBACK_URL
         );
     }
 

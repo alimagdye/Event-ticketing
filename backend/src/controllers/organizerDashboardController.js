@@ -3,21 +3,26 @@ import { sendSuccess } from '../utils/response.js';
 import organizerDashboardService from '../services/organizerDashboardService.js';
 
 const organizerDashboardController = {
-
     getStats: asyncWrapper(async (req, res) => {
         const userId = req.user.id;
         const [eventStats, ticketStats, orderStats, revenueStats] = await Promise.all([
-            organizerDashboardService.getEventStats(userId),
+            organizerDashboardService.getEventsStats(userId),
             organizerDashboardService.getTicketStats(userId),
             organizerDashboardService.getOrderStats(userId),
             organizerDashboardService.getRevenueStats(userId),
         ]);
-        return sendSuccess(res, { data: {
-            event: eventStats || {},
-            ticket: ticketStats || {},
-            order: orderStats || {},
-            revenue: revenueStats || {},
-        } }, 200);
+        return sendSuccess(
+            res,
+            {
+                data: {
+                    event: eventStats || {},
+                    ticket: ticketStats || {},
+                    order: orderStats || {},
+                    revenue: revenueStats || {},
+                },
+            },
+            200
+        );
     }),
 
     getAnalytics: asyncWrapper(async (req, res) => {
@@ -39,7 +44,6 @@ const organizerDashboardController = {
             200
         );
     }),
-
 };
 
 export default organizerDashboardController;

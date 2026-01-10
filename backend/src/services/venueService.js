@@ -1,3 +1,4 @@
+import { parse } from 'dotenv';
 import { prisma as prismaClient } from '../config/db.js';
 
 const venueService = {
@@ -37,8 +38,8 @@ const venueService = {
                 city,
                 country,
                 zipCode,
-                longitude,
-                latitude,
+                longitude: parseFloat(longitude),
+                latitude: parseFloat(latitude),
                 googlePlaceId,
                 state,
                 governorateId,
@@ -70,8 +71,8 @@ const venueService = {
                 city,
                 country,
                 zipCode,
-                latitude,
-                longitude,
+                latitude: parseFloat(latitude),
+                longitude: parseFloat(longitude),
                 googlePlaceId,
                 state,
                 governorateId,

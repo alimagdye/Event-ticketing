@@ -7,7 +7,11 @@ import { UPLOADS_ROOT } from './services/storage/localDriver.js';
 import { cors, corsOptions } from './config/cors.js';
 import { activityLogger } from './middlewares/activityLogger.js';
 
-app.use(helmet());
+app.use(
+    helmet({
+        crossOriginResourcePolicy: false,
+    })
+)
 app.use(cors(corsOptions));
 app.use(activityLogger);
 

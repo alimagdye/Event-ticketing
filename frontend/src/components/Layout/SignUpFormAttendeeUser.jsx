@@ -2,89 +2,63 @@ import { useState } from "react";
 import FacebookLogo from "../Icons/FacebookLogo";
 import GoogleLogo from "../Icons/GoogleLogo";
 import { redirect } from "react-router-dom";
-import { useAuth} from "../../Hooks/useAuth";
+import { useAuth } from "../../Hooks/useAuth";
 import { validateSignup } from "../../utils/FormVaildators";
-import EyeTrager from "../UI/eyetrager";
-import { signup } from "../../APIs/authAPIs";
+import EyeTrager from "../Icons/Eyetrager";
+import { getGoogleAuth, signup } from "../../APIs/authAPIs";
 import Loading from "./LoadingLayout";
+import ErrorDialog from "../Dialogs/ErrorDialog";
 
-function SignUpFormAttendeeUser({ submitedData }) {
+function SignUpFormAttendeeUser({ loadingpage }) {
+  const [openDialog, setopenDialog] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState("");
+
   const {
     values,
     handleChange,
     showPassword,
-    showDialog,
-    closeDialog,
-    dialogMessage,
+    // showDialog,
+    // closeDialog,
+    // dialogMessage,
     handleShowPassword,
     errors,
     submit,
-    loading
+    loading,
+    setLoading,
   } = useAuth({
     initialValues: { name: "", email: "", password: "" },
     validator: validateSignup,
     onSubmit: signup,
     redirectFrom: "signup",
     redirectTo: "/otp-verification",
+    openDialog,
+    dialogMessage,
+    setDialogMessage,
+    setopenDialog,
   });
-  // const [showPassword, setshowPassword] = useState(false);
-  // const [errors, setErrors] = useState({
-  //   name: null,
-  //   email: null,
-  //   password: null,
-  // });
-  // const handleShowpassword = () => {
-  //   setshowPassword(!showPassword);
-  // };
 
-  // const validateForm = (formData) => {
-  //   const newErrors = {};
+  const handleGoogleAuth = async (e) => {
+    try {
+      loadingpage(true);
+      const response = await getGoogleAuth();
 
-  //   if (!formData.userName.trim()) {
-  //     newErrors.Name = "Name is required";
-  //   }
+      const googleAuthUrl = response.data.data.url;
+      //  console.log(googleAuthUrl);
 
-  //   if (!formData.Email.includes("@")) {
-  //     newErrors.Email = "Invalid email format";
-  //   }
-  //   if (!formData.Email.trim()) {
-  //     newErrors.Email = "email is requierd";
-  //   }
-
-  //   if (!formData.Password.trim()) {
-  //     newErrors.Password = "password is requierd";
-  //   } else if (formData.Password.trim().length < 6) {
-  //     newErrors.Password = "Password must be at least 6 characters";
-  //   }
-  //   console.log(newErrors);
-
-  //   setErrors(newErrors);
-
-  //   console.log(errors);
-  //   return Object.keys(newErrors).length === 0; // true if no errors
-  // };
-
-  // const submitSignUpForm = (e) => {
-  //   e.preventDefault();
-  //   const userName = document.getElementById("Name");
-  //   const Email = document.getElementById("Email");
-  //   const Password = document.getElementById("Password");
-
-  //   const formData = {
-  //     userName: userName.value,
-  //     Email: Email.value,
-  //     Password: Password.value,
-  //   };
-  //   if (validateForm(formData)) {
-  //     submitedData(formData);
-  //   }
-  //   console.log(userName.value, Email.value, Password.value);
-  // };
+      window.location.href = googleAuthUrl;
+      loadingpage(false);
+    } catch (error) {
+      console.log(error.response.data || "something go wrong");
+    }
+  };
   return (
     <>
       {/* Social Login Buttons */}
       <div className="flex space-x-4 mb-6">
-        <button className="flex-1 border border-gray-300 rounded-md py-2 flex justify-center items-center gap-2 hover:bg-gray-50 transition hover:cursor-pointer">
+        <button
+          onClick={handleGoogleAuth}
+          className="flex-1 border border-gray-300 rounded-md py-2 flex justify-center items-center gap-2 hover:bg-gray-50 transition hover:cursor-pointer"
+        >
           <GoogleLogo /> Login with Google
         </button>
         <button className="flex-1 border border-gray-300 rounded-md py-2 flex justify-center items-center gap-2 hover:bg-gray-50 transition hover:cursor-pointer text-[#1877F2]">
@@ -186,7 +160,7 @@ function SignUpFormAttendeeUser({ submitedData }) {
           Create account
         </button>
       </form>
-      {showDialog && (
+      {/* {showDialog && (
         <div className="fixed inset-0 bg-white/40 flex items-center justify-center z-50">
           <div className="bg-white  rounded-lg shadow-lg p-6 w-120 h-50 max-w-sm flex flex-col justify-center items-center ">
             <p className="text-gray-800 text-xl">{dialogMessage}</p>
@@ -198,9 +172,16 @@ function SignUpFormAttendeeUser({ submitedData }) {
               Close
             </button>
           </div>
-          {loading && <Loading />}
         </div>
+      )} */}
+      {openDialog && (
+        <ErrorDialog
+          open={openDialog}
+          message={dialogMessage}
+          onClose={() => setopenDialog(false)}
+        />
       )}
+      {loading && <Loading />}
     </>
   );
 }

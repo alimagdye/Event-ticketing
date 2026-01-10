@@ -153,8 +153,8 @@ class OnboardingController {
     updateLocation = async (req, res) => {
         try {
             const { id } = req.user;
-            const governorateName = sanitize(req.body.governorate);
-
+            const governorateName = sanitize(req.body.governorate).trim();
+            console.log(governorateName)
             if (!governorateName) {
                 return sendFail(res, { message: 'Governorate is required' }, 400);
             }
@@ -171,12 +171,13 @@ class OnboardingController {
 
             const governorate = await prisma.governorate.findUnique({
                 where: { name: governorateName },
-                select: { id: true },
+
             });
 
             const governorateId = governorate?.id;
 
-            if (!governorateId) {
+            if (!governorate) {
+                console.log(governorate)
                 return sendFail(res, { message: 'Governorate not found' }, 404);
             }
 

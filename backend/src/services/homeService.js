@@ -72,6 +72,8 @@ const homeService = {
             bannerPath: true,
             bannerDisk: true,
             organizerId: true,
+            ticketTypes:true,
+            eventSessions:true,
         };
         const now = new Date();
 
@@ -85,6 +87,7 @@ const homeService = {
     },
 
     async nearbyEvents({ userId = null, limit = 6, page = 1 } = {}) {
+        
         return eventService.getNearbyEvents({ userId, limit, page });
     },
 

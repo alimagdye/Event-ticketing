@@ -234,7 +234,9 @@ const organizerDashboardService = {
             where: {
                 organizerId,
                 eventSessions: {
+                    some: {
                     status: 'cancelled',
+                    }
                 },
             },
         });

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getAccessToken } from "../services/cookieTokenService";
+import { getAccessToken, getRefreshToken } from "../services/cookieTokenService";
 
 export async function login(formData) {
   console.log(formData);
@@ -42,20 +42,39 @@ export async function resendOtps() {
     }
   );
 }
-export async function refreashToken() {
-  return axios.post("http://localhost:3000/api/v1/auth/refresh-token", {});
+export async function refreshToken() {
+  const refreshToken=getRefreshToken();
+  console.log("token:"+refreshToken);
+  const token = getAccessToken();
+  console.log("accessToken:"+token);
+  
+  return axios.post("http://localhost:3000/api/v1/auth/refresh-token", {refreshToken : refreshToken},{
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
 }
 export async function frogetPassword(email) {
-  return axios.post("http://localhost:3000/api/v1/auth/forgot-password", email);
+  return axios.post("http://localhost:3000/api/v1/auth/forgot-password", {email});
 }
-export async function resetPassword(newPassword) {
+export async function resetPassword(newPassword,email,token) {
   return axios.post(
-    "http://localhost:3000/api/v1/auth//reset-password",
-    newPassword
+    "http://localhost:3000/api/v1/auth/reset-password",
+    {email:email , token:token , newPassword:newPassword}
   );
 }
 export async function logout() {
-  return axios.post("http://localhost:3000/api/v1/auth/logout", {});
+    const refreshToken=getRefreshToken();
+  console.log("token:"+refreshToken);
+    const token = getAccessToken();
+  console.log("accessToken:"+token);
+  return axios.post("http://localhost:3000/api/v1/auth/logout", {refreshToken},{
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
 }
 export async function getGoogleAuth() {
   return axios.get("http://localhost:3000/api/v1/auth/google/url", {});

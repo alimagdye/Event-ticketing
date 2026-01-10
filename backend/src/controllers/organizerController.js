@@ -9,7 +9,7 @@ const organizerController = {
 
         let { title, categoryName, location, description, tickets, sessions, type, mode } =
             req.body;
-
+        console.log(req.body)
         const result = await organizerService.createEvent(userId, {
             title,
             categoryName,
@@ -46,6 +46,7 @@ const organizerController = {
         const eventId = parseInt(req.params.eventId, 10);
         const userId = req.user.id;
         const banner = req.file;
+        console.log(banner)
 
         const { title, categoryName, location, description, tickets, sessions, type, mode } =
             req.body;
