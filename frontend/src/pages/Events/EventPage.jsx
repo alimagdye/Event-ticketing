@@ -31,7 +31,7 @@ export default function EventPage({ organizer, eventinfo, review = false }) {
       const urlParams = new URLSearchParams(window.location.search);
       const id = urlParams.get("id");
       const response = await getEvents({ id: id });
-      // console.log(response);
+
       setEvent(response.data.data.event);
       const eventSessions =
         response.data.data.event?.eventSessions || eventinfo?.sessions;

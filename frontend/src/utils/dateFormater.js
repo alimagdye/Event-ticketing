@@ -1,11 +1,34 @@
-  export  const extractDateTime = (input)=> {
-  const dateObj = new Date(input);
+export const extractDateTime = (input) => {
+  
+  const realDate = input.replace("Z", "");
+  
+  const date = new Date(realDate);
+  
 
-  const date = dateObj.toISOString().split("T")[0]; // yyyy-mm-dd
-  const time = dateObj.toTimeString().split(" ")[0]; // hh:mm:ss
 
-  return { date, time };
-}
+  const formatter = new Intl.DateTimeFormat("en-EG", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+   
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(date);
+
+  const get = (type) => parts.find(p => p.type === type)?.value;
+
+  const extractedDate = `${get("year")}-${get("month")}-${get("day")}`;
+  const extractedTime = `${get("hour")}:${get("minute")}`;
+
+  return {
+    date: extractedDate,
+    time: extractedTime,
+  };
+};
+
 
 export  const extractDateParts=(dateInput)=> {
   const dateObj = new Date(dateInput);
@@ -32,12 +55,12 @@ export const formatEventSessionDate = (eventSessions = []) => {
   let lastDay;
 
 
-  for (const session of eventSessions) {
-    const {startday ,startmonth , startyear}= extractDateParts(session.startDate);
-    const {endday ,endmonth , endyear}= extractDateParts(session.endDate);
-    firstDay = startday;
-    lastDay = endday;
-  }
+  // for (const session of eventSessions) {
+  //   const {startday ,startmonth , startyear}= extractDateParts(session.startDate);
+  //   const {endday ,endmonth , endyear}= extractDateParts(session.endDate);
+  //   firstDay = startday;
+  //   lastDay = endday;
+  // }
 
   const start = new Date(session.startDate);
   const end = new Date(session.endDate);
@@ -45,9 +68,15 @@ export const formatEventSessionDate = (eventSessions = []) => {
   const startParts = extractDateParts(start);
   const endParts = extractDateParts(end);
 
-  const startTime = start.toTimeString().slice(0, 5); // HH:mm
-  const endTime = end.toTimeString().slice(0, 5);     // HH:mm
+  const startTime = extractDateTime(session.startDate).time; // HH:mm
+  const endTime = extractDateTime(session.endDate).time;     // HH:mm
 
+
+
+  // const startTime = start.toTimeString().slice(0, 5); // HH:mm
+  // const endTime = end.toTimeString().slice(0, 5);     // HH:mm
+  // console.log("startTime", startTime);
+  // console.log("endTime", endTime);
   let dateText;
 
   if (

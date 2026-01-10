@@ -16,7 +16,7 @@ export default function DisplayLocatinMap({ lat, lon, name }) {
   if (!lat || !lon) return null; 
 
   return (
-    <div className="h-70 w-full rounded overflow-hidden border">
+    <div className="h-70 w-full rounded overflow-hidden border z-5">
       <MapContainer
         center={[lat, lon]}
         zoom={15}

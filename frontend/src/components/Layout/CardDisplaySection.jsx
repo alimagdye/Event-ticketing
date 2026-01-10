@@ -62,7 +62,7 @@ function CardDisplaySection({title , endpoint}) {
       setloading(true);
       const response= await endpoint();
       const newcards = response.data.data
-      // console.log(response.data)
+      console.log(title,"    ", response.data.data);
       setcards(response.data.data.events);
       setloading(false);
     }

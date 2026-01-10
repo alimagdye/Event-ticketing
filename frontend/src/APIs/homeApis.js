@@ -15,7 +15,7 @@ export async function pastEvents() {
 }
 export async function nearbyEvents() {
   const token = getAccessToken();
-  console.log(token)
+
   return axios.get("http://localhost:3000/api/v1/home/nearby-events",
     {
       headers: {
