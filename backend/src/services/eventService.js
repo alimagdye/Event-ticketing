@@ -714,6 +714,11 @@ const eventService = {
                 organizer: true,
                 category: true,
                 ticketTypes: true,
+
+                eventSessions: {
+                    where: { status: 'active' },
+                    orderBy: { startDate: 'asc' },
+                },
             },
             orderBy: { createdAt: 'desc' },
             skip: (page - 1) * limit,
@@ -731,3 +736,7 @@ const eventService = {
 };
 
 export default eventService;
+
+/*
+give me script written in Arabic for a video I will record for a demo for the graduation project. the video will last 3 minutes. I must open the project Fa3liat and open it as a guest and show all events sections in the home page, then try the newsletter if I don't want to create an account. then try to create an account with OTP sent to email. then get to the onboarding and add personal data. then try to reset password. then try see the personalized events and location personalization events sections. then try to buy . then try to create another account using google OAuth 2.0. and do the onboarding. then try to use upgrade to organizer.
+*/
