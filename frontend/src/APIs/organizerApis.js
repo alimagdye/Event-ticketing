@@ -4,8 +4,7 @@ import { getAccessToken } from "../services/cookieTokenService";
 export async function createEvent(formDataa) {
   const token = getAccessToken();
 
-  console.log(token);
-  console.log("in createEvent :", formDataa);
+
   //   const formData = new FormData();
 
   // formData.append("banner",formDataa.banner);
@@ -40,7 +39,7 @@ export async function createEvent(formDataa) {
 export async function updateEvent(formData, id) {
 
     const token = getAccessToken();
-  console.log("token", token);
+
   return axios.put(
     `http://localhost:3000/api/v1/organizer/events/${id}`,
      formData ,
@@ -55,7 +54,7 @@ export async function updateEvent(formData, id) {
 export async function deleteEvent(id) {
 
     const token = getAccessToken();
-  console.log("token", token);
+
   return axios.delete(
     `http://localhost:3000/api/v1/organizer/events/${id}`,{
       headers: {
@@ -65,10 +64,10 @@ export async function deleteEvent(id) {
   );
 }
 export async function getAllEvents() {
-  console.log("in latest Events");
+
 
   const token = getAccessToken();
-  console.log("token", token);
+
   return axios.get(
     `http://localhost:3000/api/v1/organizer/events`,
 

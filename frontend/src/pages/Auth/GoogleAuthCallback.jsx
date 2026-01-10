@@ -9,13 +9,12 @@ function GoogleCallback() {
   const code = searchParams.get("code");
   const navigate = useNavigate();
 
-  useEffect(() => {
-  
-      try {
+  const handleCallback = async () => {
+          try {
         console.log("in callback");
 
         const params = new URLSearchParams(window.location.search);
-
+        
         const token = params.get("token");
         const expiresIn = params.get("expiresIn");
         const refreshToken = params.get("refreshToken");
@@ -25,25 +24,37 @@ function GoogleCallback() {
           refreshToken
         }
 
-   
-
+        
+        
         // Save tokens in localStorage
         setTokens(data);
+        
 
-  
+        const response =await getStatus();
+        
+        console.log(response.data.data)
+        const status =response.data.data
+        
+        if (status.isComplete) {
+          setTimeout(() => {
+   
+           navigate("/");
+         }, 1000);
 
-        // if (status.isComplete) {
-         setTimeout(() => {
-  navigate("/");
-}, 1000);
-
-        // } else {
-        //   navigate("/onboarding/personality-info");
-        // }
+        } else {
+          setTimeout(() => {
+            navigate("/onboarding/personality-info");
+          }, 1000);
+        }
       } catch (error) {
         console.error("Google callback error:", error);
       }
     
+  };
+
+  useEffect(() => {
+  
+    handleCallback();
 
       return () => {};
   }, []);

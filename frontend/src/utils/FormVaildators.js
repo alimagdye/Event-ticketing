@@ -1,6 +1,6 @@
 export const validateLogin = (formData) => {
   const errors = {};
-  console.log("validateLogin", formData);
+ 
 
   const email = formData.email?.trim();
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -68,7 +68,7 @@ export const validateOTP = (otp ) => {
 
   if (!otp || otp.length !== 6) {
     errors.otp = "OTP must be 6 characters.";
-    console.log(otp+"is error")
+ 
   }
 
   return errors;

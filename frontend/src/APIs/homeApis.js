@@ -15,7 +15,8 @@ export async function pastEvents() {
 }
 export async function nearbyEvents() {
   const token = getAccessToken();
-  return axios.get("http://localhost:3000/api/v1/home/nearby-events", {},
+  console.log(token)
+  return axios.get("http://localhost:3000/api/v1/home/nearby-events",
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -27,7 +28,7 @@ export async function personalizedEvents() {
 
   const token = getAccessToken();
 
-  return axios.get("http://localhost:3000/api/v1/home/personalized-events", { },
+  return axios.get("http://localhost:3000/api/v1/home/personalized-events", 
     {
       headers: {
         Authorization: `Bearer ${token}`,

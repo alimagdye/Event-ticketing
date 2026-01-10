@@ -83,7 +83,7 @@ export default function LocationPicker({ event, setEvent, position, setPosition,
       </div>
 
       <div className="h-80 w-full mb-6">
-        <MapContainer center={markerPosition||[30.0444, 31.2357]} zoom={12} className="h-full w-full rounded">
+        <MapContainer center={markerPosition||[30.0444, 31.2357]} zoom={12} className="h-full w-full rounded z-5">
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
            <FlyToPosition position={markerPosition} />
           <ClickMarker setPosition={setPosition} setDetails={setDetails} />

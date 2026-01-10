@@ -18,7 +18,7 @@ export const handleGoogleAuth = async (e) => {
 
     const googleAuthUrl = response.data.data.url;
     console.log(googleAuthUrl);
-
+    
     window.location.href = googleAuthUrl;
   } catch (error) {
     console.log(error.response.data || "something go wrong");
@@ -33,9 +33,6 @@ function LoginPage() {
     showPassword,
     handleShowPassword,
     errors,
-    // closeDialog,
-    // showDialog,
-    // dialogMessage,
     submit,
     loading,
   } = useAuth({
