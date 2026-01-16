@@ -11,7 +11,7 @@ app.use(
     helmet({
         crossOriginResourcePolicy: false,
     })
-)
+);
 app.use(cors(corsOptions));
 app.use(activityLogger);
 

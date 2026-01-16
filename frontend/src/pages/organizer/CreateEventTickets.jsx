@@ -30,7 +30,7 @@ function CreateEventTickets() {
   };
 
   const handleNext = () => {
-    // console.log(tickets);
+    console.log(tickets);
     updateForm("tickets", { type, tickets: tickets });
     navigate("/organizer/create-event/review");
   };
@@ -94,7 +94,7 @@ function CreateEventTickets() {
         </div>
       </div>
 
-      {type === "ticketed" && (
+      {type === "ticketed" ? (
         <div className="mb-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
             <input
@@ -148,7 +148,20 @@ function CreateEventTickets() {
             ))}
           </div>
         </div>
-      )}
+      ):
+      (
+        <div className=" flex justify-center gap-3 items-center">
+          Quantity: 
+      <input
+              value={ticketQuantity}
+              type="number"
+              onChange={(e) => {setTicketQuantity(e.target.value); setTickets([{name: "Free Event", price: 0 , quantity: e.target.value}])}}
+              placeholder="quntity"
+              className="border rounded p-2 "
+              />
+              </div>
+          )
+            }
 
       <div className="flex justify-between">
         <button onClick={() => navigate('/organizer/create-event/banner')} className="text-gray-600">

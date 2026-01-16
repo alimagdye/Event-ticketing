@@ -4,7 +4,7 @@ import locationOptions from "../../utils/LocationOptions";
 export default function HeroSection() {
     
   return (
-    <section className="w-full relative">
+    <section className="w-full relative p-2">
       
       {/* Background Placeholder — replace with your own */}
      

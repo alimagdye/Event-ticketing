@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import Loading from "../../components/Layout/LoadingLayout";
 import Card from "../../components/UI/Card";
@@ -19,11 +19,13 @@ function EventsPagination() {
 
   const [openDialog, setopenDialog] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
-  const { state } = useLocation();
+  const location = useLocation();
+  const navigate = useNavigate();
 
 //   const endpoint = state?.endpoint;
 
-  const urlParams = new URLSearchParams(window.location.search);
+  const urlParams = new URLSearchParams(location.search);
+
   const title = urlParams.get("title") || "Events";
 
   const handleEndpoint = async () => {
@@ -31,6 +33,7 @@ function EventsPagination() {
 
     try {
       const page = Number(urlParams.get("page")) || 1;
+      console.log(page)
       setEventsPage(page);
 
       setLoading(true);
@@ -48,6 +51,7 @@ function EventsPagination() {
           break;
         case "Events Just for You":
           response = await personalizedEvents(page);
+          console.log(response)
           break;
         default:
          setDialogMessage(
@@ -58,7 +62,7 @@ function EventsPagination() {
       // console.log("first")
       // console.log(response.data);
 
-      setCards(response.data.data.events || []);
+      setCards(response?.data?.data?.events || []);
     } catch (error) {
       console.log(error);
       setDialogMessage(
@@ -72,7 +76,7 @@ function EventsPagination() {
 
   useEffect(() => {
     handleEndpoint();
-  }, [ window.location.search]);
+  }, [location.search]);
 
   return (
     <>
@@ -80,20 +84,23 @@ function EventsPagination() {
         <h1 className="text-3xl font-bold mb-5 ml-10">{title}</h1>
 
         <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:gap-x-8">
-          {cards.map((card) => (
+          { cards.map((card,index) => {
+            return(
+            
             <Card
-              key={card.id}
-              bannerUrl={card.bannerUrl}
+              key={index}
+              bannerUrl={`${card.bannerUrl}`}
               title={card.title}
               description={card.description}
               date={card.date}
-              price={card.price}
-              views={card.views}
+              price={card.ticketTypes||[]}
+              views={card.viwes}
               id={card.id}
               slug={card.slug}
+              sessions={card.eventSessions||[]}
               crossOrigin="anonymous"
             />
-          ))}
+          )})}
         </div>
         <div className="w-full flex justify-center my-10 gap-20">
           <button
@@ -101,12 +108,12 @@ function EventsPagination() {
               // console.log("page ", eventsPage);
               if (eventsPage <= 1) return;
               const nextPage = eventsPage - 1;
-              const newUrlParams = new URLSearchParams(window.location.search);
+              const newUrlParams = new URLSearchParams(location.search);
               newUrlParams.set("page", nextPage);
               const newUrl = `${
-                window.location.pathname
+                location.pathname
               }?${newUrlParams.toString()}`;
-              window.history.pushState({}, "", newUrl);
+              navigate(`${location.pathname}?${newUrlParams.toString()}`);
               setEventsPage(nextPage);
               scrollTo(0, 0);
             }}
@@ -121,19 +128,23 @@ function EventsPagination() {
           </button>
           <button
             onClick={() => {
-
+              if (cards.length < 12) return;
               // console.log("page ", eventsPage);
               const nextPage = eventsPage + 1;
-              const newUrlParams = new URLSearchParams(window.location.search);
+              const newUrlParams = new URLSearchParams(location.search);
               newUrlParams.set("page", nextPage);
               const newUrl = `${
                 window.location.pathname
               }?${newUrlParams.toString()}`;
-              window.history.pushState({}, "", newUrl);
+              navigate(`${location.pathname}?${newUrlParams.toString()}`);
               setEventsPage(nextPage);
               scrollTo(0, 0);
             }}
-            className={` bg-primary md:px-30 px-20 py-3 font-semibold text-lg text-white my-15 rounded-md cursor-pointer flex gap-3 items-center`}
+            className={`${
+              cards.length < 12
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-primary cursor-pointer"
+            } md:px-30 px-20 py-3 font-semibold text-lg text-white my-15 rounded-md  flex gap-3 items-center`}
           >
             next Page <ArrowRight />
           </button>

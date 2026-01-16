@@ -28,6 +28,7 @@ function ConfirmTicketsPage() {
           quantity: ticket.count,
         })),
       };
+      // console.log(payload)
       // console.log("first ", id);
       const response = await checkoutEvent(payload, parseInt(id));
 
@@ -52,9 +53,9 @@ function ConfirmTicketsPage() {
 
         {/* Selected Tickets */}
         <div className="p-5">
-          {tickets.map((ticket) => (
+          {tickets.map((ticket,index) => (
             <div
-              key={ticket.id}
+              key={index}
               className="flex justify-between items-center mb-4 border-b border-gray-300 pb-3"
             >
               <div>

@@ -11,10 +11,11 @@ function Card({bannerUrl , title , date ,price ,views ,description ,slug ,id ,se
   const [interestedButten, setinterestedButten] = useState(false);
   const sessionssInfo = formatEventSessionDate(sessions );
   const priceRange = () => {
-    if (!price || price.length === 0) {
+
+    if (Number(price[0].price) === 0 && price.length === 1) {
       return "Free";
     }
-    if(price.length === 1){
+    if(price[0].price != 0 &&  price?.length === 1){
       return `${price[0].price} EGY`;
     }
     const minprice = Math.min(...price.map((ticket) => ticket.price));
