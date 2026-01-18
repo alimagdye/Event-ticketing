@@ -42,7 +42,7 @@ export default function OrganizerAnalyticsPage() {
       <div className="bg-white p-6 rounded-xl shadow grid">
         <p className="text-gray-500 mb-2"> selling tickets Statistics </p>
         <div className="h-45 flex items-center justify-center text-gray-400">
-          <BarChart  data={analyticsData?.ticket?.data||[]} labels={['Total Orders', 'Completed Orders', 'Pending Orders', 'Cancelled Orders']} />
+          <BarChart  data={analyticsData?.ticket?.data||[]} labels={['Total Tickets', 'Sold Tickets', 'Remaining Tickets']} />
         </div>
       </div>
       {/* Events Statistics */}

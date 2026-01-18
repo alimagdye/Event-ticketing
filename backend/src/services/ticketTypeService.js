@@ -53,6 +53,7 @@ const ticketTypeService = {
 
     // DELETE TICKET TYPES FOR EVENT
     async deleteTickets(eventId, tx = prismaClient) {
+
         return tx.ticketType.deleteMany({
             where: { eventId },
         });
@@ -63,20 +64,20 @@ const ticketTypeService = {
         const ticketsToCreate = [];
         const updateStockPromises = [];
 
+
         for (const item of orderItems) {
             for (let i = 0; i < item.quantity; i++) {
                 ticketsToCreate.push({
                     userId,
                     ticketTypeId: item.ticketTypeId,
-                    orderId: orderId,
+                    orderId: orderId.id,
                     orderItemId: item.id,
                     status: TicketStatus.VALID,
                 });
             }
-
             const updatePromise = tx.ticketType.update({
                 where: { id: item.ticketTypeId },
-                data: { sold: { increment: item.quantity } },
+                data: { sold: { increment: Number( item.quantity ) } },
             });
             updateStockPromises.push(updatePromise);
         }

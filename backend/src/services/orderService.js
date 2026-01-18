@@ -121,7 +121,7 @@ const orderService = {
                 orderId: id,
                 ticketTypeId: item.ticketTypeId,
                 price: parseFloat(item.price),
-                quantity: item.quantity,
+                quantity: parseInt(item.quantity),
             })),
         });
     },

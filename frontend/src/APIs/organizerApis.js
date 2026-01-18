@@ -39,7 +39,7 @@ export async function createEvent(formDataa) {
 export async function updateEvent(formData, id) {
 
     const token = getAccessToken();
-
+  console.log(formData)
   return axios.put(
     `http://localhost:3000/api/v1/organizer/events/${id}`,
      formData ,

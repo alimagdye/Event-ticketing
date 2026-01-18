@@ -19,7 +19,7 @@ const data={
             tension: 0.4,
             borderWidth: 3,
             borderColor: 'rgba(16, 126, 280, 1)',
-            borderWidth: 2,
+
         },
     ],
 };

@@ -130,7 +130,7 @@ const organizerService = {
 
                     updatedVenueId = updatedVenue.id;
                 }
-
+                
                 const updatedEvent = await eventService.update(
                     eventId,
                     organizer.id,
@@ -151,15 +151,15 @@ const organizerService = {
                     await eventService.createBulkSessions(updatedEvent.id, sessions, tx);
                 }
 
-                if (tickets && tickets.length > 0) {
-                    await ticketTypeService.deleteTickets(eventId, tx);
+                // if (tickets && tickets.length > 0) {
+                //     await ticketTypeService.deleteTickets(eventId, tx);
 
-                    if (type === EventType.TICKETED) {
-                        await ticketTypeService.createBulkTickets(eventId, tickets, tx);
-                    } else if (type === EventType.FREE) {
-                        await ticketTypeService.createFreeBulkTickets(eventId, tickets, tx);
-                    }
-                }
+                //     if (type === EventType.TICKETED) {
+                //         await ticketTypeService.createBulkTickets(eventId, tickets, tx);
+                //     } else if (type === EventType.FREE) {
+                //         await ticketTypeService.createFreeBulkTickets(eventId, tickets, tx);
+                //     }
+                // }
 
                 return { updatedEvent };
             });
@@ -178,6 +178,7 @@ const organizerService = {
                 },
             };
         } catch (err) {
+
             if (result?.updatedEvent?.bannerPath) {
                 await fileService
                     .delete(result.updatedEvent.bannerPath)

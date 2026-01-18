@@ -18,7 +18,7 @@ const eventController = {
         const { id: userId, email: userEmail } = req.user;
         const { id } = req.params;
         const { tickets } = req.body;
-        console.log("tickets : ",tickets)
+
 
         const result = await eventService.checkout(id, userId, userEmail, tickets);
 

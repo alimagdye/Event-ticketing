@@ -126,10 +126,10 @@ const eventService = {
     ) {
         const slug = eventService.generateSlug({ title });
 
-        const existingEvent = await eventService.findBySlug(organizerId, slug);
-        if (existingEvent) {
-            throw new ConflictError('Event with the same title already exists');
-        }
+        // const existingEvent = await eventService.findBySlug(organizerId, slug);
+        // if (existingEvent) {
+        //     throw new ConflictError('Event with the same title already exists');
+        // }
 
         let newBannerPath = null;
         let newBannerDisk = null;
@@ -373,7 +373,7 @@ const eventService = {
         });
     },
 
-    getBannerAbsUrl(events) {
+    getBannerAbsUrl(events ) {
         if (!events) return null;
         if (events && !Array.isArray(events)) {
             events = [events];
@@ -382,7 +382,7 @@ const eventService = {
             const { bannerDisk, bannerPath } = event;
 
             const absUrl = bannerPath ? fileService.getAbsUrl(bannerPath, bannerDisk) : null;
-
+            
             const { bannerDisk: _, bannerPath: __, updatedAt: ___, ...eventData } = event;
 
             return {
@@ -537,7 +537,7 @@ const eventService = {
                     userId,
                     totalPrice,
                     itemsCount,
-                    totalPrice === 0 ? OrderStatus.COMPLETED : OrderStatus.PENDING,
+                    parseInt(totalPrice) === 0 ? OrderStatus.COMPLETED : OrderStatus.PENDING,
                     {
                         selections: {
                             id: true,
@@ -560,7 +560,7 @@ const eventService = {
 
                 let session;
                 if (totalPrice === 0) {
-                    await ticketTypeService.issueTicketsForOrder(order, orderItems, userId, tx);
+                    await ticketTypeService.issueTicketsForOrder(order, userId, orderItems, tx);
                 } else {
                     session = await paymentService.createCheckoutSession(
                         undefined,

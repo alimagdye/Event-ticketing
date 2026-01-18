@@ -29,6 +29,7 @@ const eventValidation = {
             .toInt(10)
             .isInt({ gt: 0 })
             .withMessage('Ticket quantity must be a positive integer'),
+        
     ],
 };
 

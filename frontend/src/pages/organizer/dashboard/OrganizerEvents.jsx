@@ -1,4 +1,4 @@
-import { Info, RefreshCcw, Trash } from "lucide-react";
+import { Info, Pencil, RefreshCcw, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import InfoDialog from "../../../components/Dialogs/InfoDialog";
 import UpdateDialog from "../../../components/Dialogs/UpdateDialog";
@@ -109,7 +109,7 @@ export default function OrganizerEventsPage() {
     // Implement update logic here
     try {
       const eventId = selectedEvent.id;
-      console.log(`Updating event with ID: ${eventId}`);
+      // console.log(`Updating event with ID: ${eventId}`);
       // Call API to update event details
 
       navigate(`/organizer/update-event?id=${eventId}`, {
@@ -199,8 +199,9 @@ export default function OrganizerEventsPage() {
                     }}
                     className=" rounded-full hover:bg-gray-200 p-2 h-12 flex-1 hover:cursor-pointer"
                   />{" "}
-                  <RefreshCcw
+                  <Pencil
                     color="green"
+                    
                     onClick={() => {
                       setUpdateDialogOpen(true);
                       setSelectedEvent(event);

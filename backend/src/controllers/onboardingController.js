@@ -154,7 +154,7 @@ class OnboardingController {
         try {
             const { id } = req.user;
             const governorateName = sanitize(req.body.governorate).trim();
-            console.log(governorateName);
+
             if (!governorateName) {
                 return sendFail(res, { message: 'Governorate is required' }, 400);
             }
@@ -176,7 +176,7 @@ class OnboardingController {
             const governorateId = governorate?.id;
 
             if (!governorate) {
-                console.log(governorate);
+
                 return sendFail(res, { message: 'Governorate not found' }, 404);
             }
 

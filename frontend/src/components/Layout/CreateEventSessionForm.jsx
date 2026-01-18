@@ -25,7 +25,7 @@ const buildDateTime = (date, time) => {
       field === "date" ? value : session.date,
       field === "endTime" ? value : session.endTime
     );
-    // console.log("startDate", startDate , "endDate", endDate);
+
     updateSession(index, "startDate", startDate);
     updateSession(index, "endDate", endDate);
   };
@@ -51,6 +51,7 @@ const buildDateTime = (date, time) => {
           <input
             type="date"
             value={session.date}
+            min={new Date().toISOString().split("T")[0]}
             onChange={(e) => handleUpdate("date", e.target.value)}
             className="w-full border rounded p-2 mt-1"
           />

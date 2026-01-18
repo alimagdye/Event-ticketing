@@ -159,7 +159,7 @@ export default function UpdateEvent() {
       for (let pair of fd.entries()) {
         // console.log(pair[0], pair[1]);
       }
-      // console.log(event)
+      console.log(fd)
       const response = await updateEvent(fd, eventData.id);
       // console.log("update response", response);
 
