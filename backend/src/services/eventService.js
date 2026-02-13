@@ -35,28 +35,39 @@ const eventService = {
         eventSessions: true,
         categoryId: true,
         createdAt: true,
+        hasSeatMap: true,
     },
 
     DEFAULT_RELATIONS: {
         venue: true,
         ticketTypes: true,
         eventSessions: true,
+        eventSeatTier: true,
+        eventSeat: true,
     },
 
-    ALLOWED_RELATIONS: ['venue', 'category', 'organizer', 'eventSessions', 'ticketTypes'],
+    ALLOWED_RELATIONS: [
+        'venue',
+        'category',
+        'organizer',
+        'eventSessions',
+        'ticketTypes',
+        'eventSeatTier',
+        'eventSeat',
+    ],
 
     MAX_LIMIT: 100,
 
     // CREATE EVENT
     async create(
         organizerId,
-        { title, description, type, mode, banner, venueId, categoryId },
+        { title, description, type, mode, banner, venueId, categoryId, eventType },
         tx = prismaClient,
         { selections, relations, exclude } = {}
     ) {
         const slug = eventService.generateSlug({ title });
 
-        const existingEvent = await eventService.exists(organizerId, slug);
+        const existingEvent = await eventService.exists(organizerId, slug, tx);
         if (existingEvent) {
             throw new ConflictError('Event with the same title already exists');
         }
@@ -85,6 +96,7 @@ const eventService = {
                 type,
                 venueId,
                 categoryId,
+                hasSeatMap: eventType === 'seatmap',
             },
             ...query,
         });
@@ -180,10 +192,10 @@ const eventService = {
             startDate: session.startDate,
             endDate: session.endDate,
         }));
-
-        return tx.eventSession.createManyAndReturn({
+        const result = await tx.eventSession.createMany({
             data: sessionsData,
         });
+        return result;
     },
 
     async handleBanner(banner, relPath = null) {
@@ -260,6 +272,7 @@ const eventService = {
             .include(relations || eventService.DEFAULT_RELATIONS)
             .omit(exclude || eventService.DEFAULT_EXCLUDE_FIELDS)
             .where(filters).value;
+        console.log(selections, relations, filters, exclude);
 
         const event = await prismaClient.event.findUnique({
             where: { id },
@@ -364,8 +377,8 @@ const eventService = {
         return eventService.getBannerAbsUrl(events);
     },
 
-    async exists(organizerId, slug) {
-        return prismaClient.event.findFirst({
+    async exists(organizerId, slug, tx = prismaClient) {
+        return tx.event.findFirst({
             where: {
                 organizerId,
                 slug,
@@ -373,7 +386,7 @@ const eventService = {
         });
     },
 
-    getBannerAbsUrl(events ) {
+    getBannerAbsUrl(events) {
         if (!events) return null;
         if (events && !Array.isArray(events)) {
             events = [events];
@@ -382,7 +395,7 @@ const eventService = {
             const { bannerDisk, bannerPath } = event;
 
             const absUrl = bannerPath ? fileService.getAbsUrl(bannerPath, bannerDisk) : null;
-            
+
             const { bannerDisk: _, bannerPath: __, updatedAt: ___, ...eventData } = event;
 
             return {
@@ -410,6 +423,19 @@ const eventService = {
                     eventId: true,
                     createdAt: true,
                     updatedAt: true,
+                },
+            },
+
+            eventSeatTier: {
+                omit: {
+                    id: true,
+                    eventId: true,
+                },
+            },
+            eventSeat: {
+                omit: {
+                    id: true,
+                    eventId: true,
                 },
             },
         };
@@ -457,7 +483,7 @@ const eventService = {
     },
 
     // VALDIATION AND FETCH TICKETS FOR CHECKOUT
-    async validateAndFetchTickets(id, requestedTickets) {
+    async validateAndFetchTickets(id, requestedTickets, tx = prismaClient) {
         const event = await eventService.getById(id, {
             relations: {
                 ticketTypes: {
@@ -475,11 +501,104 @@ const eventService = {
                         userId: true,
                     },
                 },
+                eventSeatTier: {
+                    select: {
+                        tierNumber: true,
+                        price: true,
+                        name: true,
+                    },
+                },
+                eventSeat: {
+                    select: {
+                        rowIndex: true,
+                        seatIndex: true,
+                        tierNumber: true,
+                    },
+                },
             },
         });
 
         if (!event) throw new NotFoundError('Event not found');
+        if (event.hasSeatMap) {
+            const seatMap = new Map(
+                event.eventSeat.map((seat) => [`${seat.rowIndex}-${seat.seatIndex}`, seat])
+            );
 
+            const tierMap = new Map(event.eventSeatTier.map((tier) => [tier.tierNumber, tier]));
+
+            const verifiedItems = [];
+            const lineItems = [];
+            let totalPrice = 0;
+            let itemsCount = 0;
+
+            const usedSeats = new Set();
+
+            for (const reqTicket of requestedTickets) {
+                const { row, number, tierId, tierName } = reqTicket.seatInfo;
+
+                const key = `${row}-${number}`;
+
+                //  Prevent duplicate seat in same request
+                if (usedSeats.has(key)) {
+                    throw new ConflictError('Duplicate seat selection');
+                }
+                usedSeats.add(key);
+
+                //  Check seat exists
+                const dbSeat = seatMap.get(key);
+                if (!dbSeat) {
+                    throw new NotFoundError('Seat does not exist');
+                }
+
+                //  Check seat not sold
+                if (dbSeat.isSold) {
+                    throw new ConflictError('Seat already sold');
+                }
+
+                //  Check tier matches
+                if (dbSeat.tierNumber !== Number(tierId)) {
+                    throw new ConflictError('Seat tier mismatch');
+                }
+
+                //  Get tier price
+                const dbTier = tierMap.get(Number(tierId));
+                if (!dbTier) {
+                    throw new NotFoundError('Tier not found');
+                }
+
+                const price = parseFloat(dbTier.price);
+
+                totalPrice += price;
+                itemsCount += 1;
+
+                lineItems.push({
+                    price_data: {
+                        currency: 'usd',
+                        product_data: {
+                            name: `Row ${String.fromCharCode(65 + row)}, Seat ${number + 1}`,
+                        },
+                        unit_amount: Math.round(price * 100),
+                    },
+                    quantity: 1,
+                });
+
+                verifiedItems.push({
+                    eventId: event.id,
+                    rowIndex: row,
+                    seatIndex: number,
+                    tierNumber: Number(tierId),
+                    price,
+                    ticketTypeId: Number(
+                        event.ticketTypes.find((tier) => tier.name === tierName)?.id
+                    ),
+                    name: tierName,
+                    quantity: 1,
+                });
+            }
+
+            return { event, verifiedItems, totalPrice, itemsCount, lineItems };
+        }
+        // else for general admission tickets
         const dbTicketMap = new Map(event.ticketTypes.map((t) => [t.name, t]));
         const verifiedItems = [];
         const lineItems = [];
@@ -526,7 +645,6 @@ const eventService = {
     async checkout(id, userId, userEmail, tickets) {
         const { event, verifiedItems, totalPrice, itemsCount, lineItems } =
             await eventService.validateAndFetchTickets(id, tickets);
-
         if (event.organizer.userId === userId) {
             throw new ConflictError('Organizers cannot purchase tickets for their own events');
         }
@@ -557,7 +675,6 @@ const eventService = {
                     verifiedItems,
                     tx
                 );
-
                 let session;
                 if (totalPrice === 0) {
                     await ticketTypeService.issueTicketsForOrder(order, userId, orderItems, tx);
@@ -570,13 +687,16 @@ const eventService = {
                         {
                             orderId: order.id,
                             userId,
+                            seatMetaData: JSON.stringify(verifiedItems),
                         }
                     );
                 }
 
                 return { order, session };
             },
-            { timeout: 2000 }
+            {
+                timeout: 15000, // 15 seconds
+            }
         );
 
         return {

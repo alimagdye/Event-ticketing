@@ -14,24 +14,24 @@ datasource db {
 }
 
 model User {
-  id                 String   @id @default(uuid())
+  id                 String       @id @default(uuid())
   name               String
-  email              String   @unique
+  email              String       @unique
   password           String?
-  gender             Gender   @default(male)
-  phone              String?  @unique
-  role               Role     @default(user)
+  gender             Gender       @default(male)
+  phone              String?      @unique
+  role               Role         @default(user)
   location           String?
-  languagePreference Language @default(en)
-  isVerified         Boolean  @default(false)
+  languagePreference Language     @default(en)
+  isVerified         Boolean      @default(false)
   idInProviderDB     String?
   authProvider       AuthProvider @default(LOCAL)
-  isCompleted        Boolean   @default(false)
+  isCompleted        Boolean      @default(false)
   birthDate          DateTime?
   governorateId      Int?
   governorate        Governorate? @relation(fields: [governorateId], references: [id])
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
   //* TODO: ADD 'deletedAt' field for soft delete
   //deletedAt          DateTime?
 
@@ -39,9 +39,9 @@ model User {
   refreshToken RefreshToken[]
   //* TODO: UPDATE 'Organizer' to 'organizer'
   Organizer    Organizer?
-  categories         AttendeeFavoriteCategory[]
-  tickets       Ticket[]
-  orders        Order[]
+  categories   AttendeeFavoriteCategory[]
+  tickets      Ticket[]
+  orders       Order[]
 }
 
 model NewsletterSubscriber {
@@ -105,18 +105,17 @@ enum GovernorateName {
 }
 
 model Governorate {
-  id        Int               @id @default(autoincrement())
-  name      GovernorateName   @unique
+  id        Int             @id @default(autoincrement())
+  name      GovernorateName @unique
   latitude  Float
   longitude Float
 
   // JSON array of nearest governorates IDs in order (e.g. [3, 20, 17, ...]) asc. nearest w.r.t the row's governorate
-  otherGovsIdsSorted   Json?
+  otherGovsIdsSorted Json?
 
-  users     User[]
-  venues    Venue[]
+  users  User[]
+  venues Venue[]
 }
-
 
 model Otp {
   id        Int      @id @default(autoincrement())
@@ -161,26 +160,29 @@ model Organizer {
 }
 
 model Event {
-  id          Int       @id @default(autoincrement())
-  organizerId String
-  venueId     Int?
-  categoryId  Int?
-  slug        String
-  title       String
-  bannerDisk  String    @default("local")
-  bannerPath  String
-  description String
-  type        EventType @default(ticketed)
-  mode        EventMode @default(single)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  deletedAt   DateTime?
-  category    Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  organizer   Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
-  venue       Venue?    @relation(fields: [venueId], references: [id], onDelete: SetNull)
-
+  id            Int            @id @default(autoincrement())
+  organizerId   String
+  venueId       Int?
+  categoryId    Int?
+  slug          String
+  title         String
+  bannerDisk    String         @default("local")
+  bannerPath    String
+  description   String
+  type          EventType      @default(ticketed)
+  mode          EventMode      @default(single)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
+  category      Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  organizer     Organizer      @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  venue         Venue?         @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  hasSeatMap    Boolean        @default(false)
   eventSessions EventSession[]
   ticketTypes   TicketType[]
+
+  eventSeatTier EventSeatTier[]
+  eventSeat     EventSeat[]
 
   @@unique([organizerId, slug])
 }
@@ -232,16 +234,16 @@ model Venue {
   events        Event[]
   governorateId Int
 
-  governorate   Governorate? @relation(fields: [governorateId], references: [id], onDelete: SetNull)
+  governorate Governorate? @relation(fields: [governorateId], references: [id], onDelete: SetNull)
 }
 
 model Category {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
+  id        Int                        @id @default(autoincrement())
+  name      String                     @unique
   imagePath String
-  imageDisk String   @default("local")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  imageDisk String                     @default("local")
+  createdAt DateTime                   @default(now())
+  updatedAt DateTime                   @updatedAt
   attendees AttendeeFavoriteCategory[]
   events    Event[]
 }
@@ -249,9 +251,45 @@ model Category {
 model AttendeeFavoriteCategory {
   categoryId Int
   attendeeId String
-  attendee   User  @relation(fields: [attendeeId], references: [id])
-  category   Category  @relation(fields: [categoryId], references: [id])
+  attendee   User     @relation(fields: [attendeeId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+
   @@id([attendeeId, categoryId])
+}
+
+model EventSeatTier {
+  id Int @id @default(autoincrement())
+
+  tierNumber Int
+  eventId    Int
+
+  name            String
+  price           Decimal @db.Decimal(10, 2)
+  color           String
+  numberOfRows    Int
+  numberOfColumns Int
+
+  event Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  seats EventSeat[]
+
+  @@unique([eventId, tierNumber])
+}
+
+model EventSeat {
+  id Int @id @default(autoincrement())
+
+  eventId    Int
+  tierNumber Int?
+  rowIndex   Int
+  seatIndex  Int
+  isSold     Boolean @default(false)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  tier    EventSeatTier? @relation(fields: [eventId, tierNumber], references: [eventId, tierNumber], onDelete: Cascade)
+  tickets Ticket[]
+
+  @@unique([eventId, rowIndex, seatIndex])
 }
 
 model TicketType {
@@ -274,6 +312,7 @@ model Ticket {
   id           String       @id @default(uuid())
   userId       String
   ticketTypeId Int
+  eventSeatId  Int?
   orderId      String?
   orderItemId  String
   status       TicketStatus @default(valid)
@@ -284,6 +323,7 @@ model Ticket {
   user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItem  OrderItem  @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
   order      Order?     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  eventSeat  EventSeat? @relation(fields: [eventSeatId], references: [id])
 }
 
 enum TicketStatus {
@@ -312,6 +352,9 @@ model OrderItem {
   ticketTypeId Int
   price        Decimal  @db.Decimal(10, 2)
   quantity     Int
+  //seatRowIndex  Int?
+  //seatIndex     Int?
+  //eventId       Int?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

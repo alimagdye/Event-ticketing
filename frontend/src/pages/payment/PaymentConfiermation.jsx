@@ -13,7 +13,6 @@ function ConfirmTicketsPage() {
   const { state } = useLocation();
   const tickets = state?.tickets || [];
   const id = state?.id;
-
   const subtotal = tickets.reduce((sum, t) => sum + t.price * t.count, 0);
 
   const tax = subtotal * 0.07;
@@ -26,6 +25,7 @@ function ConfirmTicketsPage() {
         tickets: tickets.map((ticket) => ({
           name: ticket.name,
           quantity: ticket.count,
+          seatInfo: ticket.seatInfo || [],
         })),
       };
       // console.log(payload)
@@ -61,7 +61,7 @@ function ConfirmTicketsPage() {
               <div>
                 <h2 className="font-semibold">{ticket.name}</h2>
                 <p className="text-gray-400">
-                  {ticket.count} × {ticket.price} EGP
+                  {ticket.count} x {ticket.price} EGP
                 </p>
               </div>
               <span className="font-bold">

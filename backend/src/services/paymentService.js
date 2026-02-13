@@ -22,21 +22,18 @@ const paymentService = {
         mode = 'payment',
         lineItems,
         customerEmail,
-        metadata = {},
-        currency = APP_CURRENCY
+        metadata = {}
     ) {
-        return paymentService.stripe.checkout.sessions.create({
+        return await paymentService.stripe.checkout.sessions.create({
             payment_method_types: paymentMethods,
             mode: mode,
             line_items: lineItems,
             success_url: SUCCESS_URL,
             cancel_url: CANCEL_URL,
             customer_email: customerEmail,
-            metadata: metadata,
-            currency: currency,
+            metadata,
         });
     },
-
     async retrieveSession(sessionId) {
         return paymentService.stripe.checkout.sessions.retrieve(sessionId);
     },
@@ -56,7 +53,6 @@ const paymentService = {
     // WEBHOOK HANDLER
     async handleWebhookEvent(signature, rawBody) {
         let event;
-
         try {
             event = this.stripe.webhooks.constructEvent(rawBody, signature, STRIPE_WEBHOOK_SECRET);
         } catch (err) {
@@ -79,19 +75,37 @@ const paymentService = {
     async handleCheckoutCompleted(session) {
         const orderId = session.metadata.orderId;
         const userId = session.metadata.userId;
+        const seatMetaData = JSON.parse(session.metadata.seatMetaData || '[]');
+        await prismaClient.$transaction(
+            async (tx) => {
+                const order = await tx.order.findUnique({
+                    where: { id: orderId },
+                    include: { orderItems: true },
+                });
 
-        await prismaClient.$transaction(async (tx) => {
-            const order = await tx.order.findUnique({
-                where: { id: orderId },
-                include: { orderItems: true },
-            });
+                if (!order || order.status === OrderStatus.COMPLETED) return;
 
-            if (!order || order.status === OrderStatus.COMPLETED) return;
-
-            await ticketTypeService.issueTicketsForOrder(orderId, userId, order.orderItems, tx);
-
-            await orderService.updateOrderStatus(orderId, OrderStatus.COMPLETED, tx);
-        });
+                if (seatMetaData[0]?.seatIndex != null) {
+                    await tx.eventSeat.updateMany({
+                        where: {
+                            OR: seatMetaData.map((item) => ({
+                                rowIndex: item.rowIndex,
+                                seatIndex: item.seatIndex,
+                                eventId: item.eventId,
+                            })),
+                        },
+                        data: {
+                            isSold: true,
+                        },
+                    });
+                }
+                await ticketTypeService.issueTicketsForOrder(orderId, userId, order.orderItems, tx);
+                await orderService.updateOrderStatus(orderId, OrderStatus.COMPLETED, tx);
+            },
+            {
+                timeout: 15000,
+            }
+        );
     },
 
     // CANCELED CHECKOUT HANDLER

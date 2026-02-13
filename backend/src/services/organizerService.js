@@ -5,6 +5,7 @@ import venueService from './venueService.js';
 import fileService from './fileService.js';
 import EventType from '../constants/enums/eventType.js';
 import categoryService from '../services/categoryService.js';
+import seatService from './seatService.js';
 
 const organizerService = {
     // CREATE
@@ -20,7 +21,22 @@ const organizerService = {
     // CREATE EVENT
     async createEvent(
         userId,
-        { title, categoryName, sessions, location, description, banner, tickets, type, mode }
+        {
+            title,
+            categoryName,
+            sessions,
+            location,
+            description,
+            banner,
+            tickets,
+            type,
+            mode,
+            eventType,
+            seatsData,
+            numberOfRows,
+            numberOfColumns,
+            priceTiers,
+        }
     ) {
         const [organizer, category] = await Promise.all([
             organizerService.getByUserId(userId),
@@ -41,49 +57,70 @@ const organizerService = {
         }
 
         if (!category) return { status: 'fail', data: { error: 'Invalid category' } };
-
-        let result = null;
+        let result;
         try {
-            const result = await prismaClient.$transaction(async (tx) => {
-                const venue = await venueService.create(location, tx);
-                if (venue.message) {
-                    return { status: 'fail', data: { error: venue.message } };
-                }
-
-                const event = await eventService.create(
-                    organizer.id,
-                    {
-                        title,
-                        description,
-                        banner,
-                        mode,
-                        type,
-                        venueId: venue.id,
-                        categoryId: category.id,
-                    },
-                    tx
-                );
-
-                const eventSessions = await eventService.createBulkSessions(event.id, sessions, tx);
-
-                let ticketTypes = [];
-                if (tickets && tickets.length > 0 && type === EventType.TICKETED) {
-                    ticketTypes = await ticketTypeService.createBulkTickets(event.id, tickets, tx);
-                } else if (tickets && tickets.length > 0 && type === EventType.FREE) {
-                    ticketTypes = await ticketTypeService.createFreeBulkTickets(
-                        event.id,
-                        tickets,
+            const result = await prismaClient.$transaction(
+                async (tx) => {
+                    const venue = await venueService.create(location, tx);
+                    if (venue.message) {
+                        throw new Error(venue.message);
+                    }
+                    const event = await eventService.create(
+                        organizer.id,
+                        {
+                            title,
+                            description,
+                            banner,
+                            mode,
+                            type,
+                            venueId: venue.id,
+                            categoryId: category.id,
+                            eventType,
+                        },
                         tx
                     );
-                }
+                    const eventSessions = await eventService.createBulkSessions(
+                        event.id,
+                        sessions,
+                        tx
+                    );
+                    let ticketTypes = [];
+                    if (tickets && tickets.length > 0 && type === EventType.TICKETED) {
+                        ticketTypes = await ticketTypeService.createBulkTickets(
+                            event.id,
+                            tickets,
+                            tx
+                        );
+                    } else if (tickets && tickets.length > 0 && type === EventType.FREE) {
+                        ticketTypes = await ticketTypeService.createFreeBulkTickets(
+                            event.id,
+                            tickets,
+                            tx
+                        );
+                    }
+                    if (eventType === 'seatmap') {
+                        await seatService.createEventSeatTiers(
+                            priceTiers,
+                            numberOfRows,
+                            numberOfColumns,
+                            event.id,
+                            tx
+                        );
+                        await seatService.createEventSeats(seatsData, event.id, tx);
+                    }
 
-                return { event, ticketTypes, venue, eventSessions };
-            });
+                    return { event, ticketTypes, venue, eventSessions };
+                },
+                {
+                    timeout: 50000, // 15 seconds
+                }
+            );
             return {
                 status: 'success',
                 data: result,
             };
         } catch (err) {
+            console.log(err);
             if (result?.event.bannerPath) {
                 await fileService.delete(result?.event.bannerPath);
             }
@@ -120,49 +157,54 @@ const organizerService = {
         let oldBannerPath = event.bannerPath;
         let result;
         try {
-            result = await prismaClient.$transaction(async (tx) => {
-                let updatedVenueId = event.venueId;
-                if (location) {
-                    const updatedVenue = await venueService.update(event.venueId, location, tx);
-                    if (updatedVenue.message) {
-                        return { status: 'fail', data: { error: updatedVenue.message } };
+            result = await prismaClient.$transaction(
+                async (tx) => {
+                    let updatedVenueId = event.venueId;
+                    if (location) {
+                        const updatedVenue = await venueService.update(event.venueId, location, tx);
+                        if (updatedVenue.message) {
+                            return { status: 'fail', data: { error: updatedVenue.message } };
+                        }
+
+                        updatedVenueId = updatedVenue.id;
                     }
 
-                    updatedVenueId = updatedVenue.id;
+                    const updatedEvent = await eventService.update(
+                        eventId,
+                        organizer.id,
+                        {
+                            title,
+                            description,
+                            banner,
+                            mode,
+                            type,
+                            categoryId: category.id,
+                            venueId: updatedVenueId,
+                        },
+                        tx
+                    );
+
+                    if (sessions && sessions.length > 0) {
+                        await eventService.deleteSessions(eventId, tx);
+                        await eventService.createBulkSessions(updatedEvent.id, sessions, tx);
+                    }
+
+                    // if (tickets && tickets.length > 0) {
+                    //     await ticketTypeService.deleteTickets(eventId, tx);
+
+                    //     if (type === EventType.TICKETED) {
+                    //         await ticketTypeService.createBulkTickets(eventId, tickets, tx);
+                    //     } else if (type === EventType.FREE) {
+                    //         await ticketTypeService.createFreeBulkTickets(eventId, tickets, tx);
+                    //     }
+                    // }
+
+                    return { updatedEvent };
+                },
+                {
+                    timeout: 15000, // 15 seconds
                 }
-                
-                const updatedEvent = await eventService.update(
-                    eventId,
-                    organizer.id,
-                    {
-                        title,
-                        description,
-                        banner,
-                        mode,
-                        type,
-                        categoryId: category.id,
-                        venueId: updatedVenueId,
-                    },
-                    tx
-                );
-
-                if (sessions && sessions.length > 0) {
-                    await eventService.deleteSessions(eventId, tx);
-                    await eventService.createBulkSessions(updatedEvent.id, sessions, tx);
-                }
-
-                // if (tickets && tickets.length > 0) {
-                //     await ticketTypeService.deleteTickets(eventId, tx);
-
-                //     if (type === EventType.TICKETED) {
-                //         await ticketTypeService.createBulkTickets(eventId, tickets, tx);
-                //     } else if (type === EventType.FREE) {
-                //         await ticketTypeService.createFreeBulkTickets(eventId, tickets, tx);
-                //     }
-                // }
-
-                return { updatedEvent };
-            });
+            );
 
             if (banner && oldBannerPath) {
                 await fileService
@@ -178,7 +220,6 @@ const organizerService = {
                 },
             };
         } catch (err) {
-
             if (result?.updatedEvent?.bannerPath) {
                 await fileService
                     .delete(result.updatedEvent.bannerPath)

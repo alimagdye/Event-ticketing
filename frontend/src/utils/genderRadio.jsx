@@ -1,5 +1,5 @@
 import FemaleIcon from "../components/Icons/Female";
-import MaleIcon from "../components/Icons/male";
+import MaleIcon from "../components/Icons/Male";
 
 const genderRadio = [
   {

@@ -31,7 +31,7 @@ function HomePage() {
         endpoint={personalizedEvents}
       />
       <CardDisplaySection
-        title={"What’s New This Week"}
+        title={"What's New This Week"}
         endpoint={newEventsThisWeek}
       />
       <CuratedEventsSection />

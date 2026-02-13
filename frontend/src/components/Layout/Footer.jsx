@@ -160,7 +160,7 @@ export default function Footer() {
 
       {/* Bottom */}
       <div className="mt-12 pt-6  border-t border-white/20 text-center text-white/80">
-        © 2025 Fa3liat. All rights reserved.
+        © {new Date().getFullYear()} Fa3liat. All rights reserved.
       </div>
       {loading && <Loading />}
     </footer>

@@ -31,7 +31,7 @@ const venueService = {
             return { message: 'Governorate not found' };
         }
 
-        return tx.venue.create({
+        return await tx.venue.create({
             data: {
                 name,
                 address,
@@ -63,7 +63,7 @@ const venueService = {
             return  { message: 'Governorate not found' };
         }
 
-        return tx.venue.update({
+        return await tx.venue.update({
             where: { id: venueId },
             data: {
                 name,
@@ -81,7 +81,7 @@ const venueService = {
     },
 
     async getVenues() {
-        return prismaClient.venue.findMany();
+        return await prismaClient.venue.findMany();
     },
 };
 export default venueService;

@@ -8,18 +8,23 @@ const ticketTypeService = {
         updatedAt: true,
         eventId: true,
     },
-    
+
     //CREATE BULK TICKETS TYPES
     async createBulkTickets(eventId, ticketTypes, tx = prismaClient) {
-        const ticketTypeData = ticketTypes.map((ticket) => ({
-            eventId,
-            name: ticket.name,
-            price: parseFloat(ticket.price),
-            quantity: parseFloat(ticket.quantity),
-        }));
-        return tx.ticketType.createManyAndReturn({
-            data: ticketTypeData,
-        });
+        try {
+            const ticketTypeData = ticketTypes.map((ticket) => ({
+                eventId,
+                name: ticket.name,
+                price: parseFloat(ticket.price),
+                quantity: parseFloat(ticket.quantity),
+            }));
+            const result = await tx.ticketType.createMany({
+                data: ticketTypeData,
+            });
+            return result;
+        } catch (error) {
+            console.log(error);
+        }
     },
 
     //CREATE FREE BULK TICKET TYPES
@@ -30,7 +35,7 @@ const ticketTypeService = {
             price: 0,
             quantity: parseFloat(ticket.quantity) || 100,
         }));
-        return tx.ticketType.createManyAndReturn({
+        return await tx.ticketType.createMany({
             data: ticketTypeData,
         });
     },
@@ -53,7 +58,6 @@ const ticketTypeService = {
 
     // DELETE TICKET TYPES FOR EVENT
     async deleteTickets(eventId, tx = prismaClient) {
-
         return tx.ticketType.deleteMany({
             where: { eventId },
         });
@@ -63,7 +67,6 @@ const ticketTypeService = {
     async issueTicketsForOrder(orderId, userId, orderItems, tx = prismaClient) {
         const ticketsToCreate = [];
         const updateStockPromises = [];
-
 
         for (const item of orderItems) {
             for (let i = 0; i < item.quantity; i++) {
@@ -77,9 +80,19 @@ const ticketTypeService = {
             }
             const updatePromise = tx.ticketType.update({
                 where: { id: item.ticketTypeId },
-                data: { sold: { increment: Number( item.quantity ) } },
+                data: { sold: { increment: Number(item.quantity) } },
             });
             updateStockPromises.push(updatePromise);
+            // tx.eventSeat.update({
+            //     where: {
+            //         rowIndex: item.seatRowIndex,
+            //         seatIndex: item.seatIndex,
+            //         eventId: item.eventId,
+            //     },
+            //     data: {
+            //         isSold: true,
+            //     },
+            // });
         }
 
         const [_, tickets] = await Promise.all([

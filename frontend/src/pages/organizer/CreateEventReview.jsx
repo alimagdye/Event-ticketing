@@ -3,7 +3,6 @@ import { useEventForm } from "../../Context/EventPovider";
 import CreateEventProgressBar from "../../components/UI/CreateEventProgressBar";
 import { Link, useNavigate } from "react-router-dom";
 import { createEvent } from "../../APIs/organizerApis";
-import { useUser } from "../../Context/AuthProvider";
 import EventPage from "../Events/EventPage";
 import { Title } from "react-head";
 import ErrorDialog from "../../components/Dialogs/ErrorDialog";
@@ -15,8 +14,7 @@ function CreateEventReview() {
   const [openDialog, setopenDialog] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  
-  const { user } = useUser();
+
   const navigate = useNavigate();
 
   const submit = async () => {
@@ -35,11 +33,11 @@ function CreateEventReview() {
       for (let i = 0; i < formData.basicInfo.sessions.length; i++) {
         fd.append(
           `sessions[${i}][startDate]`,
-          formData.basicInfo.sessions[i].startDate
+          formData.basicInfo.sessions[i].startDate,
         );
         fd.append(
           `sessions[${i}][endDate]`,
-          formData.basicInfo.sessions[i].endDate
+          formData.basicInfo.sessions[i].endDate,
         );
       }
 
@@ -56,11 +54,11 @@ function CreateEventReview() {
       fd.append("location[country]", formData.basicInfo.location.country);
       fd.append(
         "location[latitude]",
-        parseFloat(formData.basicInfo.location.latitude)
+        parseFloat(formData.basicInfo.location.latitude),
       );
       fd.append(
         "location[longitude]",
-        parseFloat(formData.basicInfo.location.longitude)
+        parseFloat(formData.basicInfo.location.longitude),
       );
 
       // === TICKETS ARRAY ===
@@ -69,8 +67,19 @@ function CreateEventReview() {
         fd.append(`tickets[${i}][price]`, formData.tickets.tickets[i].price);
         fd.append(
           `tickets[${i}][quantity]`,
-          formData.tickets.tickets[i].quantity
+          formData.tickets.tickets[i].quantity,
         );
+      }
+
+      fd.append("eventType", formData.tickets.eventType);
+
+      // === SEATS ===
+      if (formData.tickets.eventType === "seatmap") {
+        fd.append("seatsData", JSON.stringify(formData.tickets.seats));
+        console.log(JSON.stringify(formData.tickets.seats));
+        fd.append("numberOfRows", String(formData.tickets.rows));
+        fd.append("numberOfColumns", String(formData.tickets.seatsPerRow));
+        fd.append("priceTiers", JSON.stringify(formData.tickets.priceTiers));
       }
 
       // Debug: Show form data
@@ -80,18 +89,15 @@ function CreateEventReview() {
       setLoading(true);
       const response = await createEvent(fd, true); // send formData
 
-      // console.log("EVENT CREATED", response);
-
       alert("Event created successfully!");
       navigate(`/organizer/dashboard/overview`);
     } catch (error) {
-        const message =
-        error.response?.data?.message || "Something went wrong";
+      const message = error.response?.data?.message || "Something went wrong";
       setDialogMessage(message);
       setopenDialog(true);
     } finally {
       setSubmitting(false);
-      setLoading(false)
+      setLoading(false);
     }
   };
   return (
@@ -150,7 +156,7 @@ function CreateEventReview() {
           }}
           review={true}
         />
-        <div className="h-full w-full inset-0 absolute z-100" ></div>
+        <div className="h-full w-full inset-0 absolute z-100"></div>
       </div>
 
       <div className="flex justify-between mt-6">
@@ -165,8 +171,14 @@ function CreateEventReview() {
           {submitting ? "Creating..." : "Create Event"}
         </button>
       </div>
-            {openDialog && <ErrorDialog open={openDialog} message={dialogMessage} onClose={() => setopenDialog(false)} />}
-              {loading && <Loading />}
+      {openDialog && (
+        <ErrorDialog
+          open={openDialog}
+          message={dialogMessage}
+          onClose={() => setopenDialog(false)}
+        />
+      )}
+      {loading && <Loading />}
     </div>
   );
 }
