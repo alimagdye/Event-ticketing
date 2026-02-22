@@ -27,6 +27,7 @@
     "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.9.6",
     "react-slick": "^0.31.0",
+    "socket.io-client": "^4.8.1",
     "tailwindcss": "^4.1.16",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",

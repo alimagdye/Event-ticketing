@@ -23,7 +23,6 @@ async function optionalAuth(req, res, next) {
     } catch (err) {
         req.user = {};
     }
-    console.log('continue');
     next();
 }
 export default optionalAuth;

@@ -3,8 +3,12 @@ import NavigationBar from "../../components/Layout/NavigationBar";
 import Footer from "../../components/Layout/Footer";
 import OtherEventsSlider from "../../components/Layout/OtherEventsSlider";
 import { Title } from "react-head";
-import { useEffect, useState } from "react";
-import { getEvents } from "../../APIs/eventApis";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  getEventAvailability,
+  getEvents,
+  reserveEventSeats,
+} from "../../APIs/eventApis";
 import DisplayLocatinMap from "./../../components/UI/DisplayLocatinMap";
 import Loading from "./../../components/Layout/LoadingLayout";
 import { extractDateTime } from "../../utils/dateFormater";
@@ -31,8 +35,11 @@ import {
 } from "./../../components/shadcn/dialog";
 import { ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
+import { io } from "socket.io-client";
 
-const RESERVATION_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+const RESERVATION_DURATION = 10 * 60 * 1000; // fallback: 1 minutes
+const SOCKET_SERVER_URL = "http://localhost:3000";
+const RESERVATION_STORAGE_PREFIX = "event-seat-reservation";
 
 export default function EventPage({ organizer, eventinfo, review = false }) {
   const [event, setEvent] = useState(eventinfo || {});
@@ -107,6 +114,7 @@ export default function EventPage({ organizer, eventinfo, review = false }) {
         setRows(parseInt(storedRows));
         setSeatsPerRow(parseInt(storedSeatsPerRow));
         setSeats(storedSeats);
+        await loadAvailability(response.data.data.event.id, storedSeats);
       }
     } catch (error) {
       const message =
@@ -152,29 +160,210 @@ Special Dance performances and surprises!`;
   const [viewMode, setViewMode] = useState("pricing");
   const [reservationExpiry, setReservationExpiry] = useState(null);
   const [showReservationDialog, setShowReservationDialog] = useState(false);
+  const [isReserving, setIsReserving] = useState(false);
+  const seatsRef = useRef([]);
+  const selectedSeatsRef = useRef([]);
+  const isReservingRef = useRef(false);
 
-  // Check for expired reservations
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = Date.now();
-      setSeats((prev) =>
-        prev.map((seat) => {
-          if (
-            seat.status === "reserved" &&
-            seat.reservedUntil &&
-            seat.reservedUntil < now
-          ) {
-            return { ...seat, status: "available", reservedUntil: undefined };
-          }
-          return seat;
-        }),
-      );
-    }, 1000);
-
-    return () => clearInterval(interval);
+  const getReservationStorageKey = useCallback((eventId) => {
+    return `${RESERVATION_STORAGE_PREFIX}:${eventId}`;
   }, []);
 
+  const clearStoredReservation = useCallback(
+    (eventId) => {
+      if (typeof window === "undefined" || !eventId) return;
+      localStorage.removeItem(getReservationStorageKey(eventId));
+    },
+    [getReservationStorageKey],
+  );
+
+  const saveStoredReservation = useCallback(
+    (eventId, expiresAt, seatsToStore) => {
+      if (typeof window === "undefined" || !eventId) return;
+      if (!expiresAt || seatsToStore.length === 0) return;
+
+      const payload = {
+        expiresAt,
+        seats: seatsToStore.map((seat) => ({
+          row: seat.row,
+          number: seat.number,
+          tierId: seat.tierId || null,
+        })),
+      };
+
+      localStorage.setItem(
+        getReservationStorageKey(eventId),
+        JSON.stringify(payload),
+      );
+    },
+    [getReservationStorageKey],
+  );
+
+  const mapAvailabilityToSeats = useCallback(
+    (availabilitySeats = [], fallbackSeats = []) => {
+      const fallbackMap = new Map(
+        fallbackSeats.map((seat) => [`${seat.row}-${seat.number}`, seat]),
+      );
+
+      return availabilitySeats.map((seat) => {
+        const key = `${seat.row}-${seat.number}`;
+        const fallbackSeat = fallbackMap.get(key);
+
+        return {
+          row: seat.row,
+          number: seat.number,
+          tierId: seat.tierId ? `${seat.tierId}` : fallbackSeat?.tierId || null,
+          status: seat.status,
+        };
+      });
+    },
+    [],
+  );
+
+  const loadAvailability = useCallback(
+    async (eventId, fallbackSeats = []) => {
+      if (!eventId) return;
+
+      try {
+        const availabilityResponse = await getEventAvailability(eventId);
+        const availability = availabilityResponse.data?.data?.availability;
+        if (!availability?.seats) return;
+
+        const mappedSeats = mapAvailabilityToSeats(
+          availability.seats,
+          fallbackSeats,
+        );
+        setSeats(mappedSeats);
+      } catch (error) {
+        console.log("Failed to load seat availability", error);
+      }
+    },
+    [mapAvailabilityToSeats],
+  );
+
+  useEffect(() => {
+    seatsRef.current = seats;
+  }, [seats]);
+
+  useEffect(() => {
+    selectedSeatsRef.current = selectedSeats;
+  }, [selectedSeats]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!event?.id || !event?.hasSeatMap) return;
+
+    const key = getReservationStorageKey(event.id);
+    const rawReservation = localStorage.getItem(key);
+    if (!rawReservation) return;
+
+    try {
+      const parsedReservation = JSON.parse(rawReservation);
+      const expiresAt = Number(parsedReservation?.expiresAt);
+      const savedSeats = Array.isArray(parsedReservation?.seats)
+        ? parsedReservation.seats
+        : [];
+
+      if (!expiresAt || expiresAt <= Date.now() || savedSeats.length === 0) {
+        clearStoredReservation(event.id);
+        return;
+      }
+
+      setReservationExpiry(expiresAt);
+      setSelectedSeats(
+        savedSeats.map((seat) => ({
+          row: seat.row,
+          number: seat.number,
+          tierId: seat.tierId ? `${seat.tierId}` : null,
+          status: "reserved",
+        })),
+      );
+    } catch {
+      clearStoredReservation(event.id);
+    }
+  }, [
+    event?.id,
+    event?.hasSeatMap,
+    getReservationStorageKey,
+    clearStoredReservation,
+  ]);
+
+  useEffect(() => {
+    if (!event?.id || !event?.hasSeatMap) return;
+
+    if (!reservationExpiry || selectedSeats.length === 0) {
+      clearStoredReservation(event.id);
+      return;
+    }
+
+    if (reservationExpiry <= Date.now()) {
+      clearStoredReservation(event.id);
+      return;
+    }
+
+    saveStoredReservation(event.id, reservationExpiry, selectedSeats);
+  }, [
+    event?.id,
+    event?.hasSeatMap,
+    reservationExpiry,
+    selectedSeats,
+    saveStoredReservation,
+    clearStoredReservation,
+  ]);
+
+  useEffect(() => {
+    if (!event?.id || !event?.hasSeatMap) return;
+
+    const socket = io(SOCKET_SERVER_URL);
+    socket.on("connect", () => {
+      socket.emit("join-event", event.id);
+      loadAvailability(event.id, seatsRef.current);
+    });
+
+    socket.on("seat:update", ({ row, number, status }) => {
+      setSeats((prevSeats) =>
+        prevSeats.map((seat) =>
+          seat.row === row && seat.number === number
+            ? { ...seat, status }
+            : seat,
+        ),
+      );
+    });
+
+    return () => {
+      socket.off("seat:update");
+      socket.disconnect();
+    };
+  }, [event?.id, event?.hasSeatMap, loadAvailability]);
+
+  useEffect(() => {
+    if (isReservingRef.current || isReserving) return;
+    if (reservationExpiry || selectedSeats.length === 0) return;
+
+    const unavailableKeys = new Set(
+      seats
+        .filter((seat) => seat.status !== "available")
+        .map((seat) => `${seat.row}-${seat.number}`),
+    );
+
+    const filteredSelection = selectedSeats.filter(
+      (seat) => !unavailableKeys.has(`${seat.row}-${seat.number}`),
+    );
+
+    if (filteredSelection.length !== selectedSeats.length) {
+      setSelectedSeats(filteredSelection);
+      toast.error("Some selected seats are no longer available.");
+    }
+  }, [seats, reservationExpiry, selectedSeats, isReserving]);
+
   const handleSeatClick = (row, number) => {
+    if (reservationExpiry) {
+      toast.error(
+        "You already have reserved seats. Complete purchase or wait for expiry.",
+      );
+      return;
+    }
+
     const seat = seats.find((s) => s.row === row && s.number === number);
     if (!seat || seat.status !== "available") return;
 
@@ -184,74 +373,103 @@ Special Dance performances and surprises!`;
       );
       if (isAlreadySelected) {
         return prev.filter((s) => !(s.row === row && s.number === number));
-      } else {
-        return [...prev, seat];
       }
+      return [...prev, seat];
     });
   };
 
-  const handleReserve = () => {
-    if (selectedSeats.length === 0) {
+  const handleReserve = async () => {
+    if (reservationExpiry) {
+      toast.error("You already have an active reservation.");
+      return;
+    }
+
+    const selectedSnapshot = selectedSeatsRef.current;
+    if (selectedSnapshot.length === 0) {
       toast.error("Please select at least one seat");
       return;
     }
 
-    const expiryTime = Date.now() + RESERVATION_DURATION;
-    setReservationExpiry(expiryTime);
+    if (!event?.id) return;
 
-    // Mark seats as reserved
-    setSeats((prev) =>
-      prev.map((seat) => {
-        const isSelected = selectedSeats.some(
-          (s) => s.row === seat.row && s.number === seat.number,
-        );
-        if (isSelected) {
-          return { ...seat, status: "reserved", reservedUntil: expiryTime };
-        }
-        return seat;
-      }),
+    const uniqueSelectedSeats = Array.from(
+      new Map(
+        selectedSnapshot.map((seat) => [`${seat.row}-${seat.number}`, seat]),
+      ).values(),
     );
 
-    setShowReservationDialog(true);
-    toast.success(`${selectedSeats.length} seat(s) reserved for 10 minutes`);
+    const tickets = uniqueSelectedSeats.map((seat) => {
+      const tier = priceTiers.find((t) => t.id === seat.tierId);
+      return {
+        seatInfo: {
+          row: seat.row,
+          number: seat.number,
+          tierId: seat.tierId,
+          tierName: tier?.name,
+        },
+      };
+    });
+
+    try {
+      isReservingRef.current = true;
+      setIsReserving(true);
+      await reserveEventSeats(event.id, tickets);
+      const localExpiry = Date.now() + RESERVATION_DURATION;
+      setReservationExpiry(localExpiry);
+      setSelectedSeats(
+        uniqueSelectedSeats.map((seat) => ({ ...seat, status: "reserved" })),
+      );
+      setShowReservationDialog(true);
+      saveStoredReservation(event.id, localExpiry, uniqueSelectedSeats);
+    } catch (error) {
+      const message =
+        error.response?.data?.data?.message ||
+        error.response?.data?.message ||
+        "Failed to reserve selected seats";
+      toast.error(message);
+      await loadAvailability(event.id, seatsRef.current);
+    } finally {
+      isReservingRef.current = false;
+      setIsReserving(false);
+    }
   };
 
-  const handleReservationExpire = () => {
-    // Release reserved seats
-    setSeats((prev) =>
-      prev.map((seat) => {
-        const isSelected = selectedSeats.some(
-          (s) => s.row === seat.row && s.number === seat.number,
-        );
-        if (isSelected && seat.status === "reserved") {
-          return { ...seat, status: "available", reservedUntil: undefined };
-        }
-        return seat;
-      }),
-    );
-
+  const handleReservationExpire = async () => {
     setSelectedSeats([]);
     setReservationExpiry(null);
     setShowReservationDialog(false);
+    clearStoredReservation(event?.id);
+    if (event?.id) {
+      await loadAvailability(event.id, seatsRef.current);
+    }
     toast.error("Reservation expired. Seats have been released.");
   };
 
   const handleBuyNow = () => {
-    // Mark seats as sold
+    const selectedSnapshot = selectedSeatsRef.current;
+    if (!reservationExpiry || selectedSnapshot.length === 0) {
+      toast.error("Reserve seats first before purchasing.");
+      return;
+    }
+
     setSeats((prev) =>
       prev.map((seat) => {
-        const isSelected = selectedSeats.some(
+        const isSelected = selectedSnapshot.some(
           (s) => s.row === seat.row && s.number === seat.number,
         );
         if (isSelected) {
-          return { ...seat, status: "sold", reservedUntil: undefined };
+          return { ...seat, status: "sold" };
         }
         return seat;
       }),
     );
 
-    const total = calculateTotal();
-    const tickets = selectedSeats.map((seat) => {
+    const total = selectedSnapshot.reduce((sum, seat) => {
+      const tier = priceTiers.find((t) => t.id === seat.tierId);
+      return sum + (tier?.price || 0);
+    }, 0);
+
+    const tickets = selectedSnapshot.map((seat) => {
       const tier = priceTiers.find((t) => t.id === seat.tierId);
       return {
         name: `Row ${String.fromCharCode(65 + seat.row)}, Seat ${seat.number + 1} (${tier?.name || "General"})`,
@@ -265,13 +483,15 @@ Special Dance performances and surprises!`;
         },
       };
     });
+
     navigate("/payment/confirmation", {
       state: { tickets, id: event.id },
     });
-    toast.success(`Purchase successful! Total: $${total}`);
+    toast.success(`Purchase successful! Total: $${total.toFixed(2)}`);
     setSelectedSeats([]);
     setReservationExpiry(null);
     setShowReservationDialog(false);
+    clearStoredReservation(event?.id);
   };
 
   const calculateTotal = () => {
@@ -280,6 +500,8 @@ Special Dance performances and surprises!`;
       return sum + (tier?.price || 0);
     }, 0);
   };
+
+  const totalToPurchase = calculateTotal();
 
   const getAvailabilityStats = () => {
     const available = seats.filter(
@@ -546,18 +768,21 @@ Special Dance performances and surprises!`;
                         <div className="border-t pt-3 flex justify-between items-center">
                           <span className="font-semibold">Total</span>
                           <span className="text-xl font-bold text-green-600">
-                            ${calculateTotal()}
+                            ${totalToPurchase.toFixed(2)}
                           </span>
                         </div>
                         {user?.id ? (
                           !reservationExpiry && (
                             <Button
                               onClick={handleReserve}
+                              disabled={isReserving}
                               className="w-full"
                               size="lg"
                             >
                               <Clock className="w-4 h-4 mr-2" />
-                              Reserve for 10 Minutes
+                              {isReserving
+                                ? "Reserving..."
+                                : "Reserve for 10 Minutes"}
                             </Button>
                           )
                         ) : (
@@ -582,11 +807,12 @@ Special Dance performances and surprises!`;
                     reservationExpiry && (
                       <Button
                         onClick={handleBuyNow}
+                        disabled={selectedSeats.length === 0}
                         className="w-full"
                         size="lg"
                       >
                         <ShoppingCart className="w-4 h-4 mr-2" />
-                        Complete Purchase - ${calculateTotal()}
+                        Complete Purchase - ${totalToPurchase.toFixed(2)}
                       </Button>
                     )
                   ) : (
@@ -747,17 +973,6 @@ Special Dance performances and surprises!`;
           </p>
         </div>
 
-        {/* Tags */}
-        {/* <div className="mb-10">
-        <h2 className="text-xl font-semibold mb-3">Tags</h2>
-        <div className="flex flex-wrap gap-2">
-          {["Holiday Concert", "Live Performance", "Seasonal Event", "Family-Friendly", "#Christmas_Spirit", "#Christmas_Carols"].map((tag) => (
-            <span key={tag} className="bg-gray-200 px-3 py-1 rounded-full text-sm">
-              {tag}
-            </span>
-          ))}
-          </div>
-      </div> */}
         <hr className="text-gray-400 mt-10 " />
       </div>
 
