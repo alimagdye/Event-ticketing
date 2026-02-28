@@ -19,3 +19,24 @@ export async function checkoutEvent(tickets,id) {
     }
   );
 }
+
+export async function getEventAvailability(id) {
+  const token = getAccessToken();
+  return axios.get(`http://localhost:3000/api/v1/events/${id}/availability`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+}
+
+export async function reserveEventSeats(id, tickets) {
+  const token = getAccessToken();
+  return axios.post(
+    `http://localhost:3000/api/v1/events/${id}/reserve`,
+    { tickets },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+}

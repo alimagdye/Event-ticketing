@@ -12,9 +12,18 @@ async function connectRedis() {
             console.log('✅ Redis connected successfully');
         });
 
-        redis.on('ready', () => {
+        redis.on('ready', async () => {
             console.log('✅ Redis is ready to accept commands');
-            resolve(redis); // Now connectRedis resolves only when ready
+
+            try {
+                // 🔥 Enable key expiration events
+                await redis.config('SET', 'notify-keyspace-events', 'Ex');
+                console.log('✅ Redis keyspace notifications enabled (Ex)');
+            } catch (err) {
+                console.error('❌ Failed to enable keyspace notifications:', err.message);
+            }
+
+            resolve(redis);
         });
 
         redis.on('error', (err) => {

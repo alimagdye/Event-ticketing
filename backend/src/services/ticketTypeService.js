@@ -83,16 +83,6 @@ const ticketTypeService = {
                 data: { sold: { increment: Number(item.quantity) } },
             });
             updateStockPromises.push(updatePromise);
-            // tx.eventSeat.update({
-            //     where: {
-            //         rowIndex: item.seatRowIndex,
-            //         seatIndex: item.seatIndex,
-            //         eventId: item.eventId,
-            //     },
-            //     data: {
-            //         isSold: true,
-            //     },
-            // });
         }
 
         const [_, tickets] = await Promise.all([

@@ -9,6 +9,7 @@ import NotFoundError from '../errors/NotFoundError.js';
 import paymentService from './paymentService.js';
 import OrderStatus from '../constants/enums/orderStatus.js';
 import ticketTypeService from './ticketTypeService.js';
+import { redis } from '../config/redis.js';
 
 const eventService = {
     DEFAULT_MEDIA_FOLDER: 'events',
@@ -57,6 +58,7 @@ const eventService = {
     ],
 
     MAX_LIMIT: 100,
+    RESERVATION_TTL_SECONDS: 10 * 60,
 
     // CREATE EVENT
     async create(
@@ -451,6 +453,66 @@ const eventService = {
         return event;
     },
 
+    async availability(eventId) {
+        // first check if the event exists and has seat map,
+        const event = await eventService.getById(eventId, {
+            relations: {
+                eventSeat: {
+                    select: {
+                        rowIndex: true,
+                        seatIndex: true,
+                        isSold: true,
+                    },
+                },
+            },
+        });
+
+        if (!event) {
+            return {
+                status: 'fail',
+                statusCode: 404,
+                data: { message: 'Event not found' },
+            };
+        }
+
+        if (!event.hasSeatMap) {
+            return {
+                status: 'fail',
+                statusCode: 400,
+                data: { message: 'Event does not support seat map' },
+            };
+        }
+        // second get seats reserved from redis and modify seats from main DB to have reserved seats also
+        const reservedSeats = await redis.keys(`reservation:event:${eventId}:seat:*`);
+        const reservedSeatSet = new Set(reservedSeats.map((key) => key.split(':').slice(-1)[0]));
+        const seats = event.eventSeat.map((seat) => {
+            const key = `${seat.rowIndex}-${seat.seatIndex}`;
+            if (seat.isSold) {
+                return {
+                    row: seat.rowIndex,
+                    number: seat.seatIndex,
+                    status: 'sold',
+                };
+            }
+            if (reservedSeatSet.has(key)) {
+                return {
+                    row: seat.rowIndex,
+                    number: seat.seatIndex,
+                    status: 'reserved',
+                };
+            }
+            return {
+                row: seat.rowIndex,
+                number: seat.seatIndex,
+                status: 'available',
+            };
+        });
+        return {
+            eventId,
+            seats,
+        };
+    },
+
     async findSessionById(sessionId, { selections, relations, filters, exclude } = {}) {
         const query = new PrismaQueryBuilder({
             maxLimit: eventService.MAX_LIMIT,
@@ -483,7 +545,7 @@ const eventService = {
     },
 
     // VALDIATION AND FETCH TICKETS FOR CHECKOUT
-    async validateAndFetchTickets(id, requestedTickets, tx = prismaClient) {
+    async validateAndFetchTickets(id, requestedTickets, userId) {
         const event = await eventService.getById(id, {
             relations: {
                 ticketTypes: {
@@ -566,6 +628,21 @@ const eventService = {
                     throw new NotFoundError('Tier not found');
                 }
 
+                // check seats reserved in redis by the same user
+                const reservationKey = `reservation:event:${id}:seat:${key}`;
+                const reservation = await redis.get(reservationKey);
+                if (reservation) {
+                    const reservationData = JSON.parse(reservation);
+                    if (reservationData.userId !== userId) {
+                        throw new ConflictError('Seat already reserved by another user');
+                    }
+                } else {
+                    // if not reserved, throw error to force frontend to reserve it first before checkout
+                    throw new ConflictError(
+                        'Seat not reserved, please reserve the seat before checkout'
+                    );
+                }
+
                 const price = parseFloat(dbTier.price);
 
                 totalPrice += price;
@@ -644,7 +721,7 @@ const eventService = {
     // CHECKOUT PROCESS
     async checkout(id, userId, userEmail, tickets) {
         const { event, verifiedItems, totalPrice, itemsCount, lineItems } =
-            await eventService.validateAndFetchTickets(id, tickets);
+            await eventService.validateAndFetchTickets(id, tickets, userId);
         if (event.organizer.userId === userId) {
             throw new ConflictError('Organizers cannot purchase tickets for their own events');
         }
@@ -706,6 +783,129 @@ const eventService = {
                 stripeUrl: session?.url,
             },
         };
+    },
+
+    async reserve(eventId, userId, tickets, io) {
+        // first check if the event exists and has seat map,
+        const event = await eventService.getById(eventId, {
+            relations: {
+                eventSeat: {
+                    select: {
+                        rowIndex: true,
+                        seatIndex: true,
+                        isSold: true,
+                    },
+                },
+            },
+        });
+
+        if (!event) {
+            return {
+                status: 'fail',
+                statusCode: 404,
+                data: { message: 'Event not found' },
+            };
+        }
+
+        if (!event.hasSeatMap) {
+            return {
+                status: 'fail',
+                statusCode: 400,
+                data: { message: 'Seat reservation is only supported for seat-map events' },
+            };
+        }
+
+        // then validate the requested seats,
+        // Build lookup object
+        const seatMap = {};
+
+        for (const seat of event.eventSeat) {
+            const key = `${seat.rowIndex}-${seat.seatIndex}`;
+            seatMap[key] = seat;
+        }
+
+        let seatsRequest = {};
+        // Validate tickets
+        for (const ticket of tickets) {
+            const { row, number } = ticket.seatInfo;
+            const key = `${row}-${number}`;
+            if (seatsRequest[key]) {
+                return {
+                    status: 'fail',
+                    statusCode: 409,
+                    data: {
+                        message: `Duplicate seat selection at row ${row} and number ${number}`,
+                    },
+                };
+            }
+            seatsRequest[key] = true;
+            const dbSeat = seatMap[key];
+
+            if (!dbSeat) {
+                return {
+                    status: 'fail',
+                    statusCode: 404,
+                    data: { message: `Seat at row ${row} and number ${number} does not exist` },
+                };
+            }
+
+            if (dbSeat.isSold) {
+                return {
+                    status: 'fail',
+                    statusCode: 409,
+                    data: { message: `Seat at row ${row} and number ${number} is already sold` },
+                };
+            }
+        }
+
+        // then try to reserve them in redis with a TTL,
+        let reservedSeatsKeys = [];
+        try {
+            for (const ticket of tickets) {
+                const { row, number } = ticket.seatInfo;
+                const key = `reservation:event:${eventId}:seat:${row}-${number}`;
+                const value = JSON.stringify({
+                    userId,
+                });
+                const status = await redis.set(
+                    key,
+                    value,
+                    'EX',
+                    eventService.RESERVATION_TTL_SECONDS,
+                    'NX'
+                );
+                if (!status) {
+                    throw new Error(`Seat is already reserved`);
+                }
+                io.to(`event-${eventId}`).emit('seat:update', {
+                    row,
+                    number,
+                    status: 'reserved',
+                });
+                reservedSeatsKeys.push(key);
+            }
+
+            return {
+                status: 'success',
+                data: {},
+            };
+        } catch (error) {
+            if (reservedSeatsKeys.length > 0) {
+                await redis.del(...reservedSeatsKeys);
+            }
+            if (error.message === 'Seat is already reserved') {
+                return {
+                    status: 'fail',
+                    statusCode: 409,
+                    data: { message: error.message },
+                };
+            }
+            return {
+                status: 'fail',
+                statusCode: 500,
+                data: { message: 'Failed to reserve seats, please try again2' },
+            };
+        }
     },
 
     async getNearbyEvents({ userId = null, limit = 6, page = 1 } = {}) {

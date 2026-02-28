@@ -8,10 +8,12 @@ import {
 } from '../config/env.js';
 
 import { prisma as prismaClient } from '../config/db.js';
+import { redis } from '../config/redis.js';
 import AppError from '../errors/AppError.js';
 import ticketTypeService from './ticketTypeService.js';
 import orderService from './orderService.js';
 import OrderStatus from '../constants/enums/orderStatus.js';
+import { getIO } from '../config/socketInstance.js';
 
 const paymentService = {
     stripe: new Stripe(STRIPE_SECRET_KEY),
@@ -76,6 +78,14 @@ const paymentService = {
         const orderId = session.metadata.orderId;
         const userId = session.metadata.userId;
         const seatMetaData = JSON.parse(session.metadata.seatMetaData || '[]');
+        const reservedSeatKeys = seatMetaData
+            .filter(
+                (item) => item.eventId != null && item.rowIndex != null && item.seatIndex != null
+            )
+            .map(
+                (item) =>
+                    `reservation:event:${item.eventId}:seat:${item.rowIndex}-${item.seatIndex}`
+            );
         await prismaClient.$transaction(
             async (tx) => {
                 const order = await tx.order.findUnique({
@@ -106,6 +116,18 @@ const paymentService = {
                 timeout: 15000,
             }
         );
+
+        if (reservedSeatKeys.length > 0) {
+            await redis.del(...reservedSeatKeys);
+        }
+        const io = getIO();
+        for (const item of seatMetaData) {
+            io.to(`event-${item.eventId}`).emit('seat:update', {
+                row: item.rowIndex,
+                number: item.seatIndex,
+                status: 'sold',
+            });
+        }
     },
 
     // CANCELED CHECKOUT HANDLER
