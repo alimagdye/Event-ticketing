@@ -625,7 +625,7 @@ Special Dance performances and surprises!`;
               open={showReservationDialog}
               onOpenChange={setShowReservationDialog}
             >
-              <DialogContent className="!bg-white">
+              <DialogContent className="bg-white!">
                 <DialogHeader>
                   <DialogTitle>Seats Reserved!</DialogTitle>
                   <DialogDescription>
