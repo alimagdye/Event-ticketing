@@ -18,11 +18,7 @@ const eventValidation = {
             .isInt({ gt: 0 })
             .withMessage('Event ID must be a positive integer'),
 
-        body('tickets.*.name')
-            .exists()
-            .withMessage('Ticket name is required')
-            .trim()
-            .isString(),
+        body('tickets.*.name').exists().withMessage('Ticket name is required').trim().isString(),
         body('tickets.*.quantity')
             .exists()
             .withMessage('Ticket quantity is required')
@@ -42,8 +38,8 @@ const eventValidation = {
         body('tickets')
             .exists()
             .withMessage('Tickets are required')
-            .isArray({ min: 1 })
-            .withMessage('Tickets must be a non-empty array'),
+            .isArray({ min: 1, max: 3 })
+            .withMessage('You must reserve between 1 and 3 tickets'),
 
         body('tickets.*.seatInfo')
             .exists()

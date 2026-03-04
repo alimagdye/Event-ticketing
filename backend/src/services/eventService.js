@@ -815,6 +815,17 @@ const eventService = {
             };
         }
 
+        const count = await redis.get(`abuse:user:${userId}`);
+        if (count && Number(count) >= 3) {
+            return {
+                status: 'fail',
+                statusCode: 403,
+                data: {
+                    message: 'Your banned due to too many unpaid reservations. Please try again later.',
+                },
+            };
+        }
+
         // then validate the requested seats,
         // Build lookup object
         const seatMap = {};
@@ -885,6 +896,16 @@ const eventService = {
                 reservedSeatsKeys.push(key);
             }
 
+            const userKey = `reservation:event:${eventId}`;
+            await redis.set(
+                userKey,
+                JSON.stringify({
+                    userId,
+                }),
+                'EX',
+                eventService.RESERVATION_TTL_SECONDS + 30
+            );
+
             return {
                 status: 'success',
                 data: {},
@@ -903,7 +924,7 @@ const eventService = {
             return {
                 status: 'fail',
                 statusCode: 500,
-                data: { message: 'Failed to reserve seats, please try again2' },
+                data: { message: 'Failed to reserve seats, please try again' },
             };
         }
     },
