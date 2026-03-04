@@ -1,3 +1,4 @@
+import axios from "axios";
 import { Calendar, Clock, Heart, Share2 } from "lucide-react";
 import NavigationBar from "../../components/Layout/NavigationBar";
 import Footer from "../../components/Layout/Footer";
@@ -37,7 +38,7 @@ import { ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { io } from "socket.io-client";
 
-const RESERVATION_DURATION = 10 * 60 * 1000; // fallback: 1 minutes
+const RESERVATION_DURATION = 10 * 60 * 1000;
 const SOCKET_SERVER_URL = "http://localhost:3000";
 const RESERVATION_STORAGE_PREFIX = "event-seat-reservation";
 
@@ -413,7 +414,19 @@ Special Dance performances and surprises!`;
     try {
       isReservingRef.current = true;
       setIsReserving(true);
-      await reserveEventSeats(event.id, tickets);
+      try {
+        await reserveEventSeats(event.id, tickets);
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          const message =
+            error.response?.data?.message || "Failed to reserve selected seats";
+          // TODO: show error dialog
+          console.log(message);
+          throw new Error(message);
+        }
+
+        throw error;
+      }
       const localExpiry = Date.now() + RESERVATION_DURATION;
       setReservationExpiry(localExpiry);
       setSelectedSeats(

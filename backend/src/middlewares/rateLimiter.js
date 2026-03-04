@@ -163,6 +163,21 @@ const paymentLimiter = rateLimiter({
     prefix: 'payment',
 });
 
+const availabilityLimiter = rateLimiter({
+    windowMs: 1 * 60 * 1000,
+    max: 30,
+    message: 'Too many availability checks. Please try again later.',
+    prefix: 'availability',
+});
+
+const reserveLimiter = rateLimiter({
+    windowMs: 10 * 60 * 1000,
+    max: 3,
+    message: 'Too many reservation attempts. Please try again later.',
+    keyGenerator: (req) => `reserve:${req.user.id}`, // rate limit based on user ID for reservations
+    prefix: 'reserve',
+});
+
 export {
     rateLimiter,
     strictLimiter,
@@ -178,4 +193,6 @@ export {
     refreshLimiter,
     requestResetLimiter,
     paymentLimiter,
+    availabilityLimiter,
+    reserveLimiter,
 };
