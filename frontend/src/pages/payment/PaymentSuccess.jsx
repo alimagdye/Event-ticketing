@@ -26,7 +26,7 @@ function PaymentSuccessPage() {
             Your tickets have been booked and sent to your email.
           </p>
             <button 
-            onClick={()=>{}}
+            onClick={()=>{navigate(`/tickets`)}}
             className="w-full bg-linear-to-r from-primary to-secandry text-white py-3 rounded-lg font-semibold mt-4 cursor-pointer hover:opacity-90 transition duration-300 " >
                 Go To Your Tickets
             </button>

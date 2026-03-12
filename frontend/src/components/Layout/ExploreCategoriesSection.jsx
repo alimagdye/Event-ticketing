@@ -2,6 +2,8 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { useCategories } from "../../Context/CategoriesProvider";
+import CategoriesSkeleton from "../UI/CategoriesSkeleton";
+import CardSkeleton from "../UI/CardSkeleton";
 
 function ExploreCategories() {
   const { categories, loading} = useCategories();
@@ -48,7 +50,7 @@ function ExploreCategories() {
           ref={scrollRef}
           className="flex  overflow-x-auto gap-10 no-scrollbar scroll-smooth"
         >
-          {categories.length > 0 && categories.map((cat, index) => ( 
+          {categories.length > 0 ? (categories.map((cat, index) => ( 
             
             <div
               key={index}
@@ -66,7 +68,7 @@ function ExploreCategories() {
                 {cat.name}
               </p>
             </div>
-          ))}
+          ))) : ([1, 2, 3, 4, 5, 6].map((temp) => <CategoriesSkeleton key={temp} />))}
         </div>
       </div>
       

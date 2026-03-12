@@ -2,12 +2,12 @@ import { ArrowRight, Ticket } from "lucide-react";
 import { useRef, useState } from "react";
 import { Title } from "react-head";
 import QRCode from "react-qr-code";
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 import TicketDialog from "../../components/Dialogs/TicketDialog";
 import { Skeleton } from "../../components/shadcn/skeleton";
 import { Card, CardContent, CardHeader } from "../../components/shadcn/card";
-
+import CardSkeleton from "../../components/UI/CardSkeleton";
 
 const mockTickets = [
   {
@@ -19,7 +19,7 @@ const mockTickets = [
     location: "City Arena",
     status: "Valid",
     organizer: "ABC Events",
-    seats: "A1, A2, A3, A4, A5"
+    seats: "A1, A2, A3, A4, A5",
   },
   {
     id: 2,
@@ -30,7 +30,7 @@ const mockTickets = [
     location: "Downtown Gallery",
     status: "Valid",
     organizer: "XYZ Arts",
-    seats: "B1, B2, B3"
+    seats: "B1, B2, B3",
   },
   {
     id: 3,
@@ -41,7 +41,7 @@ const mockTickets = [
     location: "Convention Center",
     status: "Valid",
     organizer: "TechWorld",
-    seats: "C1, C2"
+    seats: "C1, C2",
   },
   {
     id: 4,
@@ -52,34 +52,51 @@ const mockTickets = [
     location: "Stadium",
     status: "Valid",
     organizer: "Sports Inc.",
-    seats: "D1"
+    seats: "D1",
   },
 ];
 
 function DisplayUserTickets() {
   const [sortedMethod, setSortedMethod] = useState("Newest");
   const [openDialog, setopenDialog] = useState(false);
-
+  const [tickets, setTickets] = useState([]);
   const [selectedTicket, setSelectedTicket] = useState(null);
+  const [openErrorDialog, setopenErrorDialog] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState("");
 
   const handleSortingChange = (method) => {
     setSortedMethod(method);
+
+    if (method === "Newest") {
+      setTickets(tickets.sort((a, b) => b.date.localeCompare(a.date)));
+    } else if (method === "Nearest") {
+      setTickets(tickets.sort((a, b) => a.date.localeCompare(b.date)));
+    }
   };
 
-// testing downloading QR code as PDF
+  const handleLoadTickets = () => {
+    try {
+      
+      // API calling
 
+    } catch (error) {
+      const message =
+        error.response?.data?.error ||
+        "Something went wrong while fetching event data.";
+      setDialogMessage(message);
+      setopenErrorDialog(true);
+      console.log(error);
+    }
+  };
 
+  // testing downloading QR code as PDF
 
   return (
     <>
       <Title>My Tickets</Title>
 
-      
       <div className="px-4 sm:px-6 lg:px-16 xl:px-24 my-6 max-w-7xl mx-auto">
-
-        
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-
           <h1 className="font-bold text-3xl sm:text-4xl lg:text-5xl font-serif text-shadow-md text-shadow-gray-400">
             Tickets
           </h1>
@@ -115,105 +132,69 @@ function DisplayUserTickets() {
         <hr className="my-4 text-gray-300" />
 
         {/* Tickets */}
-        <div className="
+        <div
+          className="
           grid
           grid-cols-1
           sm:grid-cols-2
           lg:grid-cols-3
           gap-6
-        ">
-          {mockTickets.length >0 ? mockTickets.map((ticket) => (
-            <div
-              key={ticket.id}
-              onClick={()=>{setopenDialog(true); setSelectedTicket(ticket)}}
-              className="border rounded-xl shadow-lg flex flex-col items-center text-center overflow-hidden hover:shadow-2xl hover:scale-103 transition duration-500 hover:bg-black/5"
-            >
-              {/* QR */}
-              <div className="w-32 h-32 sm:w-40 sm:h-48 mt-8">
-                <QRCode
-                  value={ticket.qrValue}
-                  className="w-full h-full"
-                />
-              </div>
+        "
+        >
+          {tickets.length > 0
+            ? tickets.map((ticket) => (
+                <div
+                  key={ticket.id}
+                  onClick={() => {
+                    setopenDialog(true);
+                    setSelectedTicket(ticket);
+                  }}
+                  className="border rounded-xl shadow-lg flex flex-col items-center text-center overflow-hidden hover:shadow-2xl hover:scale-103 transition duration-500 hover:bg-black/5"
+                >
+                  {/* QR */}
+                  <div className="w-32 h-32 sm:w-40 sm:h-48 mt-8">
+                    <QRCode value={ticket.qrValue} className="w-full h-full" />
+                  </div>
 
-              {/* Info */}
-              <div className="py-4 px-4">
-                <h3 className="text-lg sm:text-xl font-bold mb-2">
-                  {ticket.eventName}
-                </h3>
+                  {/* Info */}
+                  <div className="py-4 px-4">
+                    <h3 className="text-lg sm:text-xl font-bold mb-2">
+                      {ticket.eventName}
+                    </h3>
 
-                <p className="text-gray-500 text-sm sm:text-base">
-                  Date: {ticket.date}
-                </p>
+                    <p className="text-gray-500 text-sm sm:text-base">
+                      Date: {ticket.date}
+                    </p>
 
-                <p className="text-gray-500 text-sm sm:text-base">
-                  Number of tickets: {ticket.numberOfTickets}
-                </p>
-              </div>
-              {/* Button */}
-              <button className="w-full bg-primary text-white py-3 flex items-center justify-center gap-2 hover:bg-primary/80 transition">
-                View Details <ArrowRight size={18} />
-              </button>
-            </div>
-          ))
-          : (
-          [1,2,3,4,5,6].map((temp) => (
-          <div key={temp}
-           className="flex flex-col-reverse justify-end items-center gap-3 border border-gray-50 rounded-xl p-4">
-
-            <Skeleton className="h-4 w-2/3 bg-gray-300" />
-            <Skeleton className="h-6 w-1/2 bg-gray-300" />
-    
-            <Skeleton className="aspect-video w-full bg-gray-300" />
-          </div>)))
-        }
-          {openDialog && <TicketDialog open={openDialog} onClose={() => setopenDialog(false)} ticket={selectedTicket} />}
-          
-     
-         
-      
-
-
-
-          {/* testing download ticket */}
-          {/* <div 
-              className="border  rounded-xl shadow-lg flex flex-col items-center text-center overflow-hidden"
-              >
-                <div ref={inputRef} className="w-full h-full flex flex-col items-center justify-center p-0">
-
-                
-         
-              <div className="w-32 h-32 sm:w-40 sm:h-40 mt-8">
-                <QRCode
-                  value="Ticket ID: 12345, Event: Music Concert"
-                  className="w-full h-full"
-                />
-              </div>
-
-              <div className="py-4 px-4">
-                <h3 className="text-lg sm:text-xl font-bold mb-2">
-                  Event Name
-                </h3>
-
-                <p className=" text-sm sm:text-base">
-                  Date: 2026-02-30 12:30pm
-                </p>
-
-                <p className=" text-sm sm:text-base">
-                  Number of tickets: 5
-                </p>
-              </div>
-
-          
-              <button
-              onClick={handleDownloadPDF}
-              className="w-full bg-secandry text-white py-3 flex items-center justify-center gap-2 hover:bg-primary/80 transition">
-                View Details <ArrowRight size={18} />
-              </button>
-            </div>
-           </div>    */}
+                    <p className="text-gray-500 text-sm sm:text-base">
+                      Number of tickets: {ticket.numberOfTickets}
+                    </p>
+                  </div>
+                  {/* Button */}
+                  <button className="w-full bg-primary text-white py-3 flex items-center justify-center gap-2 hover:bg-primary/80 transition">
+                    View Details <ArrowRight size={18} />
+                  </button>
+                </div>
+              ))
+            : [1, 2, 3, 4, 5, 6].map((temp) => (
+                <CardSkeleton key={temp}/>
+              ))}
+          {openDialog && (
+            <TicketDialog
+              open={openDialog}
+              onClose={() => setopenDialog(false)}
+              ticket={selectedTicket}
+            />
+          )}
         </div>
       </div>
+      {openErrorDialog && (
+        <ErrorDialog
+          open={openErrorDialog}
+          message={dialogMessage}
+          onClose={() => setopenErrorDialog(false)}
+        />
+      )}
     </>
   );
 }

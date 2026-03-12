@@ -119,16 +119,18 @@ function NavigationBar({ backGround = "primary" }) {
 
             {user.role === "user" || user.role === "organizer" ? (
               <div className="text-white flex items-center gap-6">
-                <div className="hidden md:flex flex-col items-center text-sm cursor-pointer">
+                <button 
+                onClick={navigate(`/tickets`)}
+                className="hidden md:flex flex-col items-center text-sm cursor-pointer">
                   <TicketIcon />
 
                   <span>Tickets</span>
-                </div>
+                </button>
 
-                <div className="hidden md:flex flex-col items-center text-sm cursor-pointer">
+                <button className="hidden md:flex flex-col items-center text-sm cursor-pointer">
                   <Heart size={30} />
                   <span>Interested</span>
-                </div>
+                </button>
 
                 <div className="relative">
                   <button
@@ -145,7 +147,9 @@ function NavigationBar({ backGround = "primary" }) {
 
                   {openProfile && (
                     <div className="absolute right-0 mt-2 bg-white text-black shadow-lg rounded-lg w-48  z-20 ">
-                      <button className="w-full text-left px-4 py-3 hover:bg-gray-200 transition duration-300 rounded-t-lg">
+                      <button 
+                      onClick={()=>{navigate(`/profile/${user.id}`)}}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-200 transition duration-300 rounded-t-lg">
                         Profile
                       </button>
                       <button
