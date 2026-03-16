@@ -1,6 +1,8 @@
 import { KeyRoundIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 function UserSettingsSecurity() {
+  const navigate = useNavigate();
   return (
     <section className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
       
@@ -22,12 +24,14 @@ function UserSettingsSecurity() {
             <div className="flex flex-col">
               <p className="font-semibold text-slate-900">Password</p>
               <p className="text-sm text-slate-500">
-                Last changed 4 months ago
+                
               </p>
             </div>
           </div>
 
-          <button className="px-4 py-2 text-sm font-bold bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">
+          <button 
+          onClick={()=>navigate(`/forget-password/get-email`)}
+          className="px-4 py-2 text-sm font-bold bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors">
             Change
           </button>
 

@@ -4,8 +4,28 @@ import { Badge } from "../../../components/shadcn/badge";
 import UserProfileHeader from "../../../components/UI/UserProfileUI/UserProfileHeader";
 import UserProfileMainLayout from "../../../components/Layout/UserProfileMainLayout";
 import UserProfileInfoItem from "../../../components/UI/UserProfileUI/UserProfileInfoItem";
+import { useNavigate } from "react-router-dom";
+import { use, useEffect } from "react";
+import { useUser } from "../../../Context/AuthProvider";
+import { getUserProfile } from "../../../APIs/profileAPI";
 
 function UserProfilePage() {
+  const navigate = useNavigate();
+  const { user } = useUser();
+
+  const handleLoadProfile = async () => {
+    try {
+      const response = await getUserProfile();
+      console.log("Success:", response.data);
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  useEffect(() => {
+    handleLoadProfile();
+  }, []);
+
   return (
     <UserProfileMainLayout>
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -61,8 +81,11 @@ function UserProfilePage() {
             </div>
           </div>
         </div>
-        <div class="bg-slate-50  p-6 flex justify-start gap-3 border-t border-slate-200 ">
-          <button class="px-6 py-2.5 rounded-lg text-md font-bold bg-primary text-white shadow-md shadow-primary/25 hover:opacity-90 transition-opacity flex items-center gap-2">
+        <div className="bg-slate-50  p-6 flex justify-start gap-3 border-t border-slate-200 ">
+          <button
+            onClick={() => navigate(`/profile/${user.id}/setting`)}
+            className="px-6 py-2.5 rounded-lg text-md font-bold bg-primary text-white shadow-md shadow-primary/25 hover:opacity-90 transition-opacity flex items-center gap-2"
+          >
             <Settings color="white" size={24} /> Edit Account
           </button>
         </div>

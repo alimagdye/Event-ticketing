@@ -38,7 +38,7 @@ import { ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { io } from "socket.io-client";
 
-const RESERVATION_DURATION = 10 * 60 * 1000;
+const RESERVATION_DURATION = 1 * 60 * 1000;
 const SOCKET_SERVER_URL = "http://localhost:3000";
 const RESERVATION_STORAGE_PREFIX = "event-seat-reservation";
 

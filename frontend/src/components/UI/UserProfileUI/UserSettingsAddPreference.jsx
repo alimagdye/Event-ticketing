@@ -20,14 +20,14 @@ function UserSettingsAddPreference({
       <div className="p-6 flex flex-col gap-4">
 
         <div className="flex flex-wrap gap-2 pl-4">
-          {preferences.map((interest) => (
+          {  preferences.map((interest) => (
             <PreferenceBadge
-              key={interest}
-              interest={interest}
-              onRemove={handlePreferenceChange}
+              key={interest.id}
+              interest={interest.name}
+              onRemove={()=>{handlePreferenceChange(interest); console.log(interest.id)}}
             />
-          ))}
-
+          )) }
+          
           <AddPreferencePopover
             availablePreferences={availablePreferences}
             handlePreferenceChange={handlePreferenceChange}

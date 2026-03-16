@@ -34,7 +34,7 @@ function PersonalInfoSection() {
           <div className="flex justify-end pt-2">
             <button
               className="px-6 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 shadow-md shadow-primary/20 transition-all"
-              type="submit"
+              
             >
               Save Changes
             </button>

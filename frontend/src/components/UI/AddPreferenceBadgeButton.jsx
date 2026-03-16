@@ -27,13 +27,14 @@ function AddPreferencePopover({
       >
         <div className="h-48 overflow-auto w-full bg-slate-100 rounded-lg text-md p-2">
 
+
           {availablePreferences.map((interest) => (
             <div
-              key={interest}
+              key={interest.id}
               onClick={() => handlePreferenceChange(interest)}
               className="p-2 hover:bg-primary/10 cursor-pointer rounded-md"
             >
-              {interest}
+              {interest.name} 
             </div>
           ))}
 

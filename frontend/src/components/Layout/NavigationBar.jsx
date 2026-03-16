@@ -120,7 +120,7 @@ function NavigationBar({ backGround = "primary" }) {
             {user.role === "user" || user.role === "organizer" ? (
               <div className="text-white flex items-center gap-6">
                 <button 
-                onClick={navigate(`/tickets`)}
+                onClick={()=>navigate(`/tickets`)}
                 className="hidden md:flex flex-col items-center text-sm cursor-pointer">
                   <TicketIcon />
 
@@ -149,12 +149,12 @@ function NavigationBar({ backGround = "primary" }) {
                     <div className="absolute right-0 mt-2 bg-white text-black shadow-lg rounded-lg w-48  z-20 ">
                       <button 
                       onClick={()=>{navigate(`/profile/${user.id}`)}}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-200 transition duration-300 rounded-t-lg">
+                      className="w-full text-left px-4 py-3 hover:bg-gray-200 transition duration-300 rounded-t-lg cursor-pointer">
                         Profile
                       </button>
                       <button
                         onClick={handlelogout}
-                        className="w-full text-left px-4 py-3  transition duration-300 flex gap-2 items-center text-red-700 hover:text-white hover:bg-red-600 "
+                        className="w-full text-left px-4 py-3  transition duration-300 flex gap-2 items-center text-red-700 hover:text-white hover:bg-red-600 cursor-pointer"
                       >
                         <DoorOpen size={20} />
                         logout
@@ -163,7 +163,7 @@ function NavigationBar({ backGround = "primary" }) {
                       {user.role === "user" ? (
                         <button
                           onClick={handleBecomeOrganizer}
-                          className="w-full text-left px-4 py-3 hover:bg-secandry/80 transition duration-300 bg-secandry text-white rounded-b-lg"
+                          className="w-full text-left px-4 py-3 hover:bg-secandry/80 transition duration-300 bg-secandry text-white rounded-b-lg cursor-pointer"
                         >
                           Upgrade to organizer
                         </button>

@@ -59,12 +59,16 @@ function CardDisplaySection({ title, endpoint }) {
 
   const handleEndpoint = async () => {
     try {
-      setloading(true);
+      // setloading(true);
       const response = await endpoint();
       const newcards = response.data.data;
+      if (newcards.events.length === 0) {
+        setcards('No events found');
+        return;
+      }
       console.log(title, "    ", response.data.data);
-      setcards(response.data.data.events);
-      setloading(false);
+      setcards(newcards.events);
+      // setloading(false);
     } catch (error) {}
   };
 
@@ -83,7 +87,10 @@ function CardDisplaySection({ title, endpoint }) {
       <h1 className=" text-3xl  font-bold mb-5 ml-10 ">{title}</h1>
       <div className="grid grid-cols-1 gap-x-6 gap-y-10 items-center sm:grid-cols-2 lg:grid-cols-3  xl:gap-x-8 ">
         {cards.length > 0
-          ? cards.map((card, index) => {
+          ? ( cards==='No events found' ? (<div
+              className="col-span-full text-center text-gray-500 pt-10 pb-2">
+            {cards}</div>) : cards.map((card, index) => {
+            return(
               <Card
                 key={index}
                 bannerUrl={`${card.bannerUrl}`}
@@ -96,9 +103,9 @@ function CardDisplaySection({ title, endpoint }) {
                 slug={card.slug}
                 sessions={card.eventSessions || []}
                 crossOrigin="anonymous"
-              />;
-            })
-          : ([1, 2, 3, 4, 5, 6].map((temp) => <CardSkeleton key={temp} />))}
+              />);
+            }))
+          : ([1, 2, 3, 4, 5, 6].map((temp,index) => <CardSkeleton key={index} />))}
       </div>
       <div className="w-full flex justify-center ">
         <button

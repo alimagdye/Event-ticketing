@@ -13,7 +13,7 @@ const mockTickets = [
   {
     id: 1,
     eventName: "Music Concert",
-    date: "2026-02-30 12:30pm",
+    date: "2027-02-01T12:30:00.000Z",
     numberOfTickets: 5,
     qrValue: "Ticket ID: 12345, Event: Music Concert",
     location: "City Arena",
@@ -24,7 +24,7 @@ const mockTickets = [
   {
     id: 2,
     eventName: "Art Exhibition",
-    date: "2026-03-15 10:00am",
+    date: "2027-03-01T12:30:00.000Z",
     numberOfTickets: 3,
     qrValue: "Ticket ID: 67890, Event: Art Exhibition",
     location: "Downtown Gallery",
@@ -35,7 +35,7 @@ const mockTickets = [
   {
     id: 3,
     eventName: "Tech Conference",
-    date: "2026-04-05 9:00am",
+    date: "2026-03-15T12:30:00.000Z",
     numberOfTickets: 2,
     qrValue: "Ticket ID: 98765, Event: Tech Conference",
     location: "Convention Center",
@@ -46,7 +46,7 @@ const mockTickets = [
   {
     id: 4,
     eventName: "Sports Event",
-    date: "2026-04-20 2:00pm",
+    date: "2027-01-015T1:30:00.000Z",
     numberOfTickets: 1,
     qrValue: "Ticket ID: 54321, Event: Sports Event",
     location: "Stadium",
@@ -59,26 +59,34 @@ const mockTickets = [
 function DisplayUserTickets() {
   const [sortedMethod, setSortedMethod] = useState("Newest");
   const [openDialog, setopenDialog] = useState(false);
-  const [tickets, setTickets] = useState([]);
+  const [tickets, setTickets] = useState(mockTickets);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [openErrorDialog, setopenErrorDialog] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
 
   const handleSortingChange = (method) => {
     setSortedMethod(method);
+    console.log(method);
 
     if (method === "Newest") {
-      setTickets(tickets.sort((a, b) => b.date.localeCompare(a.date)));
+      const newTickets = [...tickets].sort(
+        (a, b) => new Date(b.date) - new Date(a.date),
+      );
+      setTickets(newTickets);
     } else if (method === "Nearest") {
-      setTickets(tickets.sort((a, b) => a.date.localeCompare(b.date)));
+      const now = new Date();
+      const newTickets = [...tickets].sort((a, b) => {
+        const aDiff = Math.abs(new Date(a.date) - now);
+        const bDiff = Math.abs(new Date(b.date) - now);
+        return aDiff - bDiff;
+      });
+      setTickets(newTickets);
     }
   };
 
   const handleLoadTickets = () => {
     try {
-      
       // API calling
-
     } catch (error) {
       const message =
         error.response?.data?.error ||
@@ -176,9 +184,7 @@ function DisplayUserTickets() {
                   </button>
                 </div>
               ))
-            : [1, 2, 3, 4, 5, 6].map((temp) => (
-                <CardSkeleton key={temp}/>
-              ))}
+            : [1, 2, 3, 4, 5, 6].map((temp) => <CardSkeleton key={temp} />)}
           {openDialog && (
             <TicketDialog
               open={openDialog}

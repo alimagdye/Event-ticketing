@@ -68,7 +68,7 @@ function ExploreCategories() {
                 {cat.name}
               </p>
             </div>
-          ))) : ([1, 2, 3, 4, 5, 6].map((temp) => <CategoriesSkeleton key={temp} />))}
+          ))) : ([1, 2, 3, 4, 5, 6].map((temp,index) => <CategoriesSkeleton key={index} />))}
         </div>
       </div>
       
